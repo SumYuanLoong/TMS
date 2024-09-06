@@ -12,26 +12,25 @@ const cors = require("cors");
 // const clean = require('xss-clean');
 
 let ErrorHandler = require("./utils/errorHandler");
-
-var usersRouter = require('./routes/users');
+var usersRouter = require("./routes/users");
+var authRouter = require("./routes/auth");
 
 var app = express();
 
-app.use(logger('dev'));
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(helmet);
+//app.use(express.static(path.join(__dirname, 'public')));
+app.use(helmet());
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
+app.use("/users", usersRouter);
+app.use("/auth", authRouter);
 
 app.all("*", (req, res, next) => {
-    next(new ErrorHandler(`${req.url} route not found`, 404));
-  });
-  
-  console.log("app has started up");
-  
+	next(new ErrorHandler(`${req.url} route not found`, 404));
+});
+
+console.log("app has started up");
+
 module.exports = app;
