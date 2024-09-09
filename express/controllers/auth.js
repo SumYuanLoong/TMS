@@ -18,6 +18,41 @@ exports.authoriseRoles = (...Roles) => {
 		next();
 	};
 };
+
+exports.checkGroup = async (req, res, next) => {
+	// If token exists
+	if (
+		req.headers.authorization &&
+		req.headers.authorization.startsWith("Bearer")
+	) {
+		token = req.headers.authorization.split(" ")[1];
+	}
+
+	//Check if token is valid
+	try {
+		let decoded = await jwt.verify(token, process.env.JWT_secret); //if this fails, token expire
+		if (
+			!decoded || // empty token (wrong secret)
+			decoded.browser != req.headers["user-agent"] || // user-agent or ip no match
+			decoded.ipaddress != req.ip
+		) {
+			throw error("jwt secret is wrong");
+		}
+	} catch (error) {
+		// this will catch if token expires
+		console.log(error);
+		return res.status(403).send();
+	}
+
+	let { username, group } = req.body;
+
+	// fail case
+
+	// res.status(403).send();
+
+	//pass case
+	next();
+};
 /**
  * to get token
  * if (req.cookies.token) {
@@ -67,7 +102,7 @@ exports.login = async (req, res) => {
 		},
 		process.env.JWT_secret,
 		{
-			expiresIn: process.env.EXPIRE_time
+			expiresIn: process.env.EXPIRE_time * 60 * 60 * 1000
 		}
 	);
 
