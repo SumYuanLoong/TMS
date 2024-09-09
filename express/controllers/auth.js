@@ -1,7 +1,9 @@
 const { json } = require("express");
 var pool = require("../utils/db");
+var errorH = require("../utils/errorHandler");
 const userC = require("./users");
 const jwt = require("jsonwebtoken");
+const bcryt = require("bcrypt");
 
 /**
  * checks if req.user.roles matches provided roles
@@ -16,34 +18,69 @@ exports.authoriseRoles = (...Roles) => {
 		next();
 	};
 };
+/**
+ * to get token
+ * if (req.cookies.token) {
+		console.log(req.cookies.token);
+	}
+ */
 
 exports.login = async (req, res) => {
-	const { username = "Lyndon", password = "fakepassword" } = req.body;
+	let { username, password } = req.body;
+
+	//TODO: INPUT VALIDATION
+	if (!username && !password) {
+		res.status(401).json({
+			success: false,
+			message: "Invalid Credentials"
+		});
+	}
 
 	try {
-		let [val, fields] = await pool.execute(
-			`Select * from users where 'user_name' = '?'`,
+		var [val] = await pool.execute(
+			`Select * from users where user_name = ?`,
 			[username]
 		);
-		console.log(val);
 	} catch (error) {
-		console.error(error);
+		//TODO: proper error message
+		//console.error(error);
+		res.status(401).json({
+			success: false,
+			message: "Invalid Credentials"
+		});
 	}
-	//jwt need to put username, IP and browser type
+	//password matching
+	let matcha = await bcryt.compare(password, val[0].password);
+	if (!matcha) {
+		res.status(401).json({
+			success: false,
+			message: "Invalid Credentials"
+		});
+	}
+
+	//Create jwt token with some data values
 	let token = jwt.sign(
-		{ username: "", ipaddress: "", browser: "" },
+		{
+			username: val[0].user_name,
+			ipaddress: req.ip,
+			browser: req.headers["user-agent"]
+		},
 		process.env.JWT_secret,
 		{
 			expiresIn: process.env.EXPIRE_time
 		}
 	);
 
+	// prep options to send with token in cookie
 	const options = {
 		expires: new Date(
-			Date.now() + process.env.EXPIRE_time * 24 * 60 * 60 * 1000
+			Date.now() + process.env.EXPIRE_time * 60 * 60 * 1000
 		),
 		httpOnly: true
 	};
 
-	res.status(200).cookie("token", token, options);
+	res.status(200).cookie("token", token, options).json({
+		success: true,
+		token
+	});
 };
