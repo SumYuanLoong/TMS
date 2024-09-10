@@ -11,7 +11,7 @@ const cors = require("cors");
  */
 // const clean = require('xss-clean');
 
-let ErrorHandler = require("./utils/errorHandler");
+let ErrorObj = require("./utils/errorMessage");
 var usersRouter = require("./routes/users");
 var authRouter = require("./routes/auth");
 
@@ -28,7 +28,7 @@ app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 
 app.all("*", (req, res, next) => {
-	next(new ErrorHandler(`${req.url} route not found`, 404));
+	next(new ErrorObj(`${req.url} route not found`, 404));
 });
 
 console.log("app has started up");
