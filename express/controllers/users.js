@@ -113,7 +113,6 @@ exports.createUser = async (req, res, next) => {
 	let hashed = bcrypt.hashSync(password, 10);
 
 	// insert into DB
-
 	try {
 		let [val] = await pool.execute(
 			"Insert into `users` (`user_name`, `password`, `email`, `active`) values (?,?,?, 1)",
@@ -173,22 +172,61 @@ exports.updateEmail = async (req, res, next) => {
 			});
 		}
 	} catch (error) {
-		return next(
-			new ErrorObj("Unable to disable user in database", 500, "")
-		);
+		return next(new ErrorObj("Unable to update user", 500, ""));
 	}
-
-	// TODO:if have groups, append user_group table
 };
 
 exports.updatePassword = async (req, res, next) => {
 	// Validate inputs
 	const { username, password } = req.body;
 
-	// Check input requirements
 	// Check user exists
+	if (!username) {
+		return next(new ErrorObj("Empty Username field", 422, ""));
+	}
+	// check password meets requirements ((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})
+	const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
+	if (!regex.test(password)) {
+		return next(
+			new ErrorObj(
+				"Password does not meet complexity requirements",
+				400,
+				""
+			)
+		);
+	}
+
+	try {
+		let [val, fields] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("User not found", 404, ""));
+		}
+	} catch (err) {
+		return next(
+			new ErrorObj("Unable to retrive user from database", 500, "")
+		);
+	}
+
+	let hashed = bcrypt.hashSync(password, 10);
+
 	// Update fields
-	// TODO:if have groups, append user_group table
+	try {
+		let [val] = await pool.execute(
+			`update users set password = ? where user_name = ?`,
+			[hashed, username]
+		);
+		if (val.affectedRows == 1) {
+			res.status(200).json({
+				success: true,
+				message: "User updated"
+			});
+		}
+	} catch (error) {
+		return next(new ErrorObj("Unable to update user", 500, ""));
+	}
 };
 
 exports.killUser = async (req, res, next) => {
@@ -198,6 +236,8 @@ exports.killUser = async (req, res, next) => {
 	// Check user exists and status
 	if (!username) {
 		return next(new ErrorObj("Empty Username field", 422, ""));
+	} else if (username == "admin") {
+		return next(new ErrorObj("Admin cannot be disabled", 422, ""));
 	}
 
 	try {
@@ -233,3 +273,67 @@ exports.killUser = async (req, res, next) => {
 		);
 	}
 };
+
+/**
+ * password needs to check empty
+ * email check empty
+ * group?
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @returns
+ */
+// exports.updateUser = async (req, res, next) => {
+// 	const { username, email, password, grouplist } = req.body;
+// 	let mail = false,
+// 		pass = false,
+// 		group = false;
+
+// 	if (!username) {
+// 		return next(new ErrorObj("Empty Username field", 422, ""));
+// 	}
+
+// 	//check what is being updated
+// 	if (email) mail = true;
+// 	if (password) pass = true;
+// 	if (grouplist) group = true;
+
+// 	// Check user exists
+// 	try {
+// 		var [val, fields] = await pool.execute(
+// 			`Select * from users where user_name = ?`,
+// 			[username]
+// 		);
+// 		if (val.length == 0) {
+// 			return next(new ErrorObj("User not found", 404, ""));
+// 		}
+// 	} catch (err) {
+// 		return next(
+// 			new ErrorObj("Unable to retrive user from database", 500, "")
+// 		);
+// 	}
+
+// 	if (mail && val[0].email == email) {
+// 		//if new mail == old email
+// 		mail = false;
+// 	} else if (val[0].email && !mail) {
+// 		// if mail is set to empty
+// 		mail = true;
+// 	}
+
+// 	if (pass) {
+// 		const regex = new RegExp(
+// 			/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g
+// 		);
+// 		if (!regex.test(password)) {
+// 			return next(
+// 				new ErrorObj(
+// 					"Password does not meet complexity requirements",
+// 					400,
+// 					""
+// 				)
+// 			);
+// 		}
+// 		var hashed = bcrypt.hashSync(password, 10);
+// 	}
+// };

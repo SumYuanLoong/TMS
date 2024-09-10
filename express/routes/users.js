@@ -5,7 +5,10 @@ const authC = require("../controllers/auth");
 
 /* GET users listing. */
 router.get("/getall", authC.checkGroup, userC.getAllUser);
-
+router.get("/getOneUser", authC.checkGroup, userC.getOneUser);
 router.post("/createUser", authC.checkGroup, userC.createUser);
+router.patch("/updateEmail", authC.checkGroup, userC.updateEmail);
+router.patch("/updatePassword", authC.checkGroup, userC.updateEmail);
+router.delete("/", authC.checkGroup, userC.killUser);
 
 module.exports = router;

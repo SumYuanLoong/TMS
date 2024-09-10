@@ -48,8 +48,9 @@ exports.checkGroup = async (req, res, next) => {
 		return next(new ErrorObj("Invalid token", 401, ""));
 	}
 
-	let { username, group } = req.body;
+	let { username } = req.body;
 	// Group validation
+
 	// fail case
 
 	// res.status(403).send();
