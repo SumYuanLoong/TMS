@@ -70,7 +70,7 @@ exports.checkGroup = async (req, res, next) => {
  * @param {*} req
  * @param {*} res
  */
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
 	let { username, password } = req.body;
 
 	//INPUT VALIDATION
@@ -89,7 +89,7 @@ exports.login = async (req, res) => {
 	}
 	//password matching
 	let matcha = await bcryt.compare(password, val[0].password);
-	if (!matcha) {
+	if (!matcha || !val[0].active) {
 		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
@@ -124,6 +124,6 @@ exports.login = async (req, res) => {
  * Assumption is that the user is already logged in
  * so check valid jwt? and clear/invalidate cookie
  */
-exports.logout = async (req, res) => {
+exports.logout = async (req, res, next) => {
 	res.clearCookie("token").status(200).send();
 };

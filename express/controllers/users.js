@@ -6,13 +6,23 @@ var ErrorObj = require("../utils/errorMessage");
  * To use prepared statements, use pool.execute('query', [data,'data'])
  * This will internally call prepare and query seperately
  */
-exports.getAllUser = async (req, res) => {
+exports.getAllUser = async (req, res, next) => {
 	try {
 		let [val, fields] = await pool.query("Select * from users");
+		let userList = [];
 
+		// TODO: lacks group functionality
+		val.forEach((user) => {
+			let container = {
+				username: user.user_name,
+				email: user.email,
+				active: user.active
+			};
+			userList.push(container);
+		});
 		res.status(200).json({
 			success: true,
-			userList: val
+			userList: userList
 		});
 	} catch (err) {
 		return next(
@@ -21,7 +31,7 @@ exports.getAllUser = async (req, res) => {
 	}
 };
 
-exports.getOneUser = async (req, res) => {
+exports.getOneUser = async (req, res, next) => {
 	const { username } = req.body;
 
 	//data sanitise
@@ -31,15 +41,20 @@ exports.getOneUser = async (req, res) => {
 
 	try {
 		let [val, fields] = await pool.execute(
-			`Select * from users where 'username' = ?`,
+			`Select * from users where user_name = ?`,
 			[username]
 		);
 		if (val.length == 0) {
 			return next(new ErrorObj("User not found", 404, ""));
+		} else {
+			let user = {
+				username: val[0].user_name,
+				email: val[0].email
+			};
+			res.status(200).json({
+				user
+			});
 		}
-		res.status(200).json({
-			userList: val
-		});
 	} catch (err) {
 		return next(
 			new ErrorObj("Unable to retrive user from database", 500, "")
@@ -54,7 +69,7 @@ exports.getOneUser = async (req, res) => {
  * @param {string} password Password to have alphanumeric and symbol
  * @param {list} groups default null
  */
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
 	const { username, password, grouplist, email } = req.body;
 	// Input Validation regex
 	if (!username || !password) {
@@ -122,4 +137,99 @@ exports.createUser = async (req, res) => {
 	});
 };
 
-exports.updateUser = async (req, res) => {};
+exports.updateEmail = async (req, res, next) => {
+	// Validate inputs
+	const { username, email } = req.body;
+
+	// Check user exists
+	if (!username) {
+		return next(new ErrorObj("Empty Username field", 422, ""));
+	}
+
+	try {
+		let [val, fields] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("User not found", 404, ""));
+		}
+	} catch (err) {
+		return next(
+			new ErrorObj("Unable to retrive user from database", 500, "")
+		);
+	}
+
+	// Update fields
+	try {
+		let [val] = await pool.execute(
+			`update users set email = ? where user_name = ?`,
+			[email || null, username]
+		);
+		if (val.affectedRows == 1) {
+			res.status(200).json({
+				success: true,
+				message: "User updated"
+			});
+		}
+	} catch (error) {
+		return next(
+			new ErrorObj("Unable to disable user in database", 500, "")
+		);
+	}
+
+	// TODO:if have groups, append user_group table
+};
+
+exports.updatePassword = async (req, res, next) => {
+	// Validate inputs
+	const { username, password } = req.body;
+
+	// Check input requirements
+	// Check user exists
+	// Update fields
+	// TODO:if have groups, append user_group table
+};
+
+exports.killUser = async (req, res, next) => {
+	// validate inputs
+	const { username } = req.body;
+
+	// Check user exists and status
+	if (!username) {
+		return next(new ErrorObj("Empty Username field", 422, ""));
+	}
+
+	try {
+		let [val, fields] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("User not found", 404, ""));
+		} else if (val[0].active == 0) {
+			return next(new ErrorObj("User already disbled", 400, ""));
+		}
+	} catch (err) {
+		return next(
+			new ErrorObj("Unable to retrive user from database", 500, "")
+		);
+	}
+	// disable user
+	try {
+		let [val] = await pool.execute(
+			`update users set active = 0 where user_name = ?`,
+			[username]
+		);
+		if (val.affectedRows == 1) {
+			res.status(200).json({
+				success: true,
+				message: "User disabled"
+			});
+		}
+	} catch (error) {
+		return next(
+			new ErrorObj("Unable to disable user in database", 500, "")
+		);
+	}
+};
