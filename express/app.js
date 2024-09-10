@@ -28,7 +28,7 @@ app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 
 app.all("*", (req, res, next) => {
-	next(new ErrorObj(`${req.url} route not found`, 404));
+	next(new ErrorObj(`${req.url} route not found`, 404, ""));
 });
 
 console.log("app has started up");

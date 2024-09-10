@@ -1,6 +1,6 @@
 const { json } = require("express");
 var pool = require("../utils/db");
-var errorH = require("../utils/errorHandler");
+var ErrorObj = require("../utils/errorMessage");
 const userC = require("./users");
 const jwt = require("jsonwebtoken");
 const bcryt = require("bcrypt");
@@ -10,14 +10,14 @@ const bcryt = require("bcrypt");
  * @param  {...any} Roles that can access the route "Admin, Lead, User"
  * @returns
  */
-exports.authoriseRoles = (...Roles) => {
-	return (req, res, next) => {
-		if (!Roles.includes(req.user.role)) {
-			return next(Error(`Role CMI lah, dont waste my time`));
-		}
-		next();
-	};
-};
+// exports.authoriseRoles = (...Roles) => {
+// 	return (req, res, next) => {
+// 		if (!Roles.includes(req.user.role)) {
+// 			return next(ErrorObj(`Role CMI lah, dont waste my time`, 403));
+// 		}
+// 		next();
+// 	};
+// };
 
 exports.checkGroup = async (req, res, next) => {
 	// If token exists
@@ -26,6 +26,9 @@ exports.checkGroup = async (req, res, next) => {
 		req.headers.authorization.startsWith("Bearer")
 	) {
 		token = req.headers.authorization.split(" ")[1];
+	} else {
+		// token not found
+		return next(new ErrorObj("Authentication needed", 401, "no token"));
 	}
 
 	//Check if token is valid
@@ -36,16 +39,17 @@ exports.checkGroup = async (req, res, next) => {
 			decoded.browser != req.headers["user-agent"] || // user-agent or ip no match
 			decoded.ipaddress != req.ip
 		) {
-			throw error("jwt secret is wrong");
+			//TODO: proper error handling
+			return next(new ErrorObj("Invalid token", 401, ""));
 		}
 	} catch (error) {
 		// this will catch if token expires
 		console.log(error);
-		return res.status(403).send();
+		return next(new ErrorObj("Invalid token", 401, ""));
 	}
 
 	let { username, group } = req.body;
-
+	// Group validation
 	// fail case
 
 	// res.status(403).send();
@@ -60,15 +64,18 @@ exports.checkGroup = async (req, res, next) => {
 	}
  */
 
+/** Login
+ * Issue a jwt if user credentials are valid
+ *
+ * @param {*} req
+ * @param {*} res
+ */
 exports.login = async (req, res) => {
 	let { username, password } = req.body;
 
-	//TODO: INPUT VALIDATION
+	//INPUT VALIDATION
 	if (!username && !password) {
-		res.status(401).json({
-			success: false,
-			message: "Invalid Credentials"
-		});
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
 	try {
@@ -77,20 +84,13 @@ exports.login = async (req, res) => {
 			[username]
 		);
 	} catch (error) {
-		//TODO: proper error message
 		//console.error(error);
-		res.status(401).json({
-			success: false,
-			message: "Invalid Credentials"
-		});
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 	//password matching
 	let matcha = await bcryt.compare(password, val[0].password);
 	if (!matcha) {
-		res.status(401).json({
-			success: false,
-			message: "Invalid Credentials"
-		});
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
 	//Create jwt token with some data values
@@ -118,4 +118,12 @@ exports.login = async (req, res) => {
 		success: true,
 		token
 	});
+};
+
+/**Logout
+ * Assumption is that the user is already logged in
+ * so check valid jwt? and clear/invalidate cookie
+ */
+exports.logout = async (req, res) => {
+	res.clearCookie("token").status(200).send();
 };

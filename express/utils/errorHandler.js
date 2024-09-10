@@ -10,6 +10,7 @@ module.exports = (err, req, res, next) => {
 	let error = { ...err };
 
 	res.status(error.statusCode).json({
+		errorCode: error.code || 123,
 		success: false,
 		message: error.message || "Internal Server Error."
 	});
