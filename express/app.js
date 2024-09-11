@@ -11,9 +11,10 @@ const cors = require("cors");
  */
 // const clean = require('xss-clean');
 
-let ErrorObj = require("./utils/errorMessage");
+let ErrorObj = require("./utils/errorHandler");
 var usersRouter = require("./routes/users");
 var authRouter = require("./routes/auth");
+var groupsRouter = require("./routes/group");
 
 var app = express();
 
@@ -25,11 +26,14 @@ app.use(cookieParser());
 app.use(helmet());
 
 app.use("/users", usersRouter);
+app.use("/groups", groupsRouter);
 app.use("/auth", authRouter);
 
 app.all("*", (req, res, next) => {
 	next(new ErrorObj(`${req.url} route not found`, 404, ""));
 });
+
+app.use(ErrorObj);
 
 console.log("app has started up");
 
