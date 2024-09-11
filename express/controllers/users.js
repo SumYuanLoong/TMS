@@ -7,28 +7,55 @@ var ErrorObj = require("../utils/errorMessage");
  * This will internally call prepare and query seperately
  */
 exports.getAllUser = async (req, res, next) => {
+	let userList = [];
 	try {
-		let [val, fields] = await pool.query("Select * from users");
-		let userList = [];
+		let [val] = await pool.query("Select * from users");
 
-		// TODO: lacks group functionality
 		val.forEach((user) => {
 			let container = {
 				username: user.user_name,
 				email: user.email,
-				active: user.active
+				active: user.active,
+				groups: []
 			};
 			userList.push(container);
 		});
-		res.status(200).json({
-			success: true,
-			userList: userList
-		});
 	} catch (err) {
 		return next(
-			new ErrorObj("Error retriving data from database", 500, "")
+			new ErrorObj("Error retriving user table from database", 500, "")
 		);
 	}
+
+	try {
+		let statement =
+			"SELECT u.user_name, g.group_name, g.group_id " +
+			"FROM users u " +
+			"JOIN user_group ug ON u.user_name = ug.user_name " +
+			"JOIN group_list g ON ug.group_id = g.group_id ";
+		let [val] = await pool.query(statement);
+		userList.forEach((user) => {
+			const filtered = val.filter((ug) => ug.user_name == user.username);
+			filtered.forEach((ugf) => {
+				user.groups.push({
+					group_name: ugf.group_name,
+					group_id: ugf.group_id
+				});
+			});
+		});
+	} catch (error) {
+		return next(
+			new ErrorObj(
+				"Error retriving user group details from database",
+				500,
+				""
+			)
+		);
+	}
+
+	res.status(200).json({
+		success: true,
+		userList: userList
+	});
 };
 
 exports.getOneUser = async (req, res, next) => {
