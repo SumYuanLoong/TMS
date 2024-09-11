@@ -8,7 +8,7 @@ module.exports = (err, req, res, next) => {
 	err.statusCode = err.statusCode || 500;
 
 	let error = { ...err };
-
+	error.message = err.message;
 	res.status(error.statusCode).json({
 		errorCode: error.code || 123,
 		success: false,

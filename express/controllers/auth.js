@@ -19,6 +19,14 @@ const bcryt = require("bcrypt");
 // 	};
 // };
 
+/**
+ * Verifies JWT then check group user is part of
+ * the authorised group
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @returns
+ */
 exports.checkGroup = async (req, res, next) => {
 	// If token exists
 	if (
@@ -33,7 +41,7 @@ exports.checkGroup = async (req, res, next) => {
 
 	//Check if token is valid
 	try {
-		let decoded = await jwt.verify(token, process.env.JWT_secret); //if this fails, token expire
+		var decoded = await jwt.verify(token, process.env.JWT_secret); //if this fails, token expire
 		if (
 			!decoded || // empty token (wrong secret)
 			decoded.browser != req.headers["user-agent"] || // user-agent or ip no match
@@ -48,15 +56,34 @@ exports.checkGroup = async (req, res, next) => {
 		return next(new ErrorObj("Invalid token", 401, ""));
 	}
 
-	let { username } = req.body;
+	let username = decoded.username;
 	// Group validation
+	try {
+		let statement =
+			"SELECT g.group_name, g.group_id " +
+			"FROM users u " +
+			"JOIN user_group ug ON u.user_name = ug.user_name " +
+			"JOIN group_list g ON ug.group_id = g.group_id " +
+			"WHERE u.user_name = ?";
+		var [val] = await pool.query(statement, [username]);
+	} catch (dberr) {
+		return next(
+			new ErrorObj(
+				"Error retriving user group details from database",
+				500,
+				""
+			)
+		);
+	}
+	//inserting hardcoded
+	let authGroups = [1, 4];
+
+	if (val.some((grp) => authGroups.includes(grp.group_id))) {
+		return next();
+	}
 
 	// fail case
-
-	// res.status(403).send();
-
-	//pass case
-	next();
+	res.status(403).send();
 };
 /**
  * to get token
@@ -84,17 +111,20 @@ exports.login = async (req, res, next) => {
 			`Select * from users where user_name = ?`,
 			[username]
 		);
+		if (val.length == 0) {
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
+		}
 	} catch (error) {
 		//console.error(error);
 		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
-	//password matching
+	//password matching and check user disabled
 	let matcha = await bcryt.compare(password, val[0].password);
 	if (!matcha || !val[0].active) {
 		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
-	//Create jwt token with some data values
+	//Create jwt token with data values
 	let token = jwt.sign(
 		{
 			username: val[0].user_name,
@@ -127,4 +157,10 @@ exports.login = async (req, res, next) => {
  */
 exports.logout = async (req, res, next) => {
 	res.clearCookie("token").status(200).send();
+};
+
+exports.getGroups = async (req, res, next) => {
+	// to get the app of the task
+	// get app_permit
+	// return for use in checkGroup
 };

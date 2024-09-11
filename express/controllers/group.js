@@ -2,6 +2,13 @@ const { use } = require("../routes/users");
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
 
+/**
+ * TODO: test
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @returns
+ */
 exports.createGroup = async (req, res, next) => {
 	let { groupname } = req.body;
 	try {
@@ -17,10 +24,12 @@ exports.createGroup = async (req, res, next) => {
 		return next(new ErrorObj("Unable to create group", 500, ""));
 	}
 };
-
+/** used when populating dropdown lists
+ * TODO: test
+ */
 exports.getallGroup = async (req, res, next) => {
 	try {
-		let [val] = await pool.execute("select * from group_list", [groupname]);
+		let [val] = await pool.execute("select * from group_list");
 
 		res.status(200).json({
 			sucess: true,
@@ -31,16 +40,35 @@ exports.getallGroup = async (req, res, next) => {
 	}
 };
 
-/** Called directly by API
- * @param {*} req
- * @param {*} res
- * @param {*} next
+/** Called directly by API after dropdown change for user management
+ * TODO: test
+ * @param {string} username
+ * @param {List of int} grouplist selected group_ids
  */
 exports.manageGroup = async (req, res, next) => {
 	let { username, grouplist } = req.body;
 	// get list of group user is in
 	let addlist = [];
 	let killlist = [];
+
+	// Check user exists
+	if (!username) {
+		return next(new ErrorObj("Empty Username field", 422, ""));
+	}
+
+	try {
+		let [val, fields] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("User not found", 404, ""));
+		}
+	} catch (err) {
+		return next(
+			new ErrorObj("Unable to retrive user from database", 500, "")
+		);
+	}
 
 	// compare with new list
 	try {

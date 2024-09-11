@@ -3,13 +3,17 @@ const bcrypt = require("bcrypt");
 var ErrorObj = require("../utils/errorMessage");
 
 /**
- * To use prepared statements, use pool.execute('query', [data,'data'])
- * This will internally call prepare and query seperately
+ * Gets all users with groups that they belong in
+ * @returns list of user objects, each with list of group objs they belong in
  */
 exports.getAllUser = async (req, res, next) => {
 	let userList = [];
+
+	//get all users and place in list
 	try {
-		let [val] = await pool.query("Select * from users");
+		let [val] = await pool.query(
+			"Select user_name, email, active from users"
+		);
 
 		val.forEach((user) => {
 			let container = {
@@ -26,6 +30,7 @@ exports.getAllUser = async (req, res, next) => {
 		);
 	}
 
+	//get groups and update userobjs with their groups
 	try {
 		let statement =
 			"SELECT u.user_name, g.group_name, g.group_id " +
@@ -34,7 +39,7 @@ exports.getAllUser = async (req, res, next) => {
 			"JOIN group_list g ON ug.group_id = g.group_id ";
 		let [val] = await pool.query(statement);
 		userList.forEach((user) => {
-			const filtered = val.filter((ug) => ug.user_name == user.username);
+			let filtered = val.filter((ug) => ug.user_name == user.username);
 			filtered.forEach((ugf) => {
 				user.groups.push({
 					group_name: ugf.group_name,
@@ -58,6 +63,11 @@ exports.getAllUser = async (req, res, next) => {
 	});
 };
 
+/**To be used in user profile page only therefore groups are not added to call
+ *
+ * @param {string} username
+ * @returns
+ */
 exports.getOneUser = async (req, res, next) => {
 	const { username } = req.body;
 
@@ -89,12 +99,10 @@ exports.getOneUser = async (req, res, next) => {
 	}
 };
 
-/** Create user and add to group if provided
- * Assumed user validation is done
- *
+/** Create user and add to groups if provided
  * @param {string} username Unique username
  * @param {string} password Password to have alphanumeric and symbol
- * @param {list} groups default null
+ * @param {list} groups group_ids, default null
  */
 exports.createUser = async (req, res, next) => {
 	const { username, password, grouplist, email } = req.body;
@@ -163,6 +171,12 @@ exports.createUser = async (req, res, next) => {
 	});
 };
 
+/**
+ * To be used in userprofile and user management
+ * @param {username} username user must be created
+ * @param {string} email
+ * @returns boolean Success
+ */
 exports.updateEmail = async (req, res, next) => {
 	// Validate inputs
 	const { username, email } = req.body;
@@ -203,6 +217,12 @@ exports.updateEmail = async (req, res, next) => {
 	}
 };
 
+/**
+ * To be used in userprofile and user management
+ * @param {username} username user must be created
+ * @param {string} password string that meets password requirements
+ * @returns boolean Success
+ */
 exports.updatePassword = async (req, res, next) => {
 	// Validate inputs
 	const { username, password } = req.body;
@@ -256,6 +276,11 @@ exports.updatePassword = async (req, res, next) => {
 	}
 };
 
+/**
+ * To be used in user management
+ * @param {username} username user must be created and not already disabled
+ * @returns boolean Success
+ */
 exports.killUser = async (req, res, next) => {
 	// validate inputs
 	const { username } = req.body;
@@ -263,7 +288,7 @@ exports.killUser = async (req, res, next) => {
 	// Check user exists and status
 	if (!username) {
 		return next(new ErrorObj("Empty Username field", 422, ""));
-	} else if (username == "admin") {
+	} else if (username == process.env.SUPERUSER) {
 		return next(new ErrorObj("Admin cannot be disabled", 422, ""));
 	}
 
@@ -275,7 +300,7 @@ exports.killUser = async (req, res, next) => {
 		if (val.length == 0) {
 			return next(new ErrorObj("User not found", 404, ""));
 		} else if (val[0].active == 0) {
-			return next(new ErrorObj("User already disbled", 400, ""));
+			return next(new ErrorObj("User already disabled", 400, ""));
 		}
 	} catch (err) {
 		return next(
