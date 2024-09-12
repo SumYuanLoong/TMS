@@ -6,20 +6,6 @@ const jwt = require("jsonwebtoken");
 const bcryt = require("bcrypt");
 
 /**
- * checks if req.user.roles matches provided roles
- * @param  {...any} Roles that can access the route "Admin, Lead, User"
- * @returns
- */
-// exports.authoriseRoles = (...Roles) => {
-// 	return (req, res, next) => {
-// 		if (!Roles.includes(req.user.role)) {
-// 			return next(ErrorObj(`Role CMI lah, dont waste my time`, 403));
-// 		}
-// 		next();
-// 	};
-// };
-
-/**
  * Verifies JWT then check group user is part of
  * the authorised group
  * @param {*} req
@@ -27,7 +13,7 @@ const bcryt = require("bcrypt");
  * @param {*} next
  * @returns
  */
-exports.checkGroup = async (req, res, next) => {
+exports.verifyToken = async (req, res, next) => {
 	// If token exists
 	if (
 		req.headers.authorization &&
@@ -57,36 +43,20 @@ exports.checkGroup = async (req, res, next) => {
 	}
 
 	let username = decoded.username;
-	// Group validation
-	try {
-		let statement =
-			"SELECT g.group_name, g.group_id " +
-			"FROM users u " +
-			"JOIN user_group ug ON u.user_name = ug.user_name " +
-			"JOIN group_list g ON ug.group_id = g.group_id " +
-			"WHERE u.user_name = ?";
-		var [val] = await pool.query(statement, [username]);
-	} catch (dberr) {
-		return next(
-			new ErrorObj(
-				"Error retriving user group details from database",
-				500,
-				""
-			)
-		);
-	}
-	//inserting hardcoded
+	//req.username = decoded.username;
+
+	//inserting hardcoded authorised groups
+	//TODO: extraction of allowed groups
 	let authGroups = [1, 4];
-
-	if (val.some((grp) => authGroups.includes(grp.group_id))) {
-		return next();
+	if (checkGroup(username, authGroups)) {
+		next();
+	} else {
+		//fail not in group
+		res.status(403).send();
 	}
-
-	// fail case
-	res.status(403).send();
 };
 /**
- * to get token
+ * other way to get token
  * if (req.cookies.token) {
 		console.log(req.cookies.token);
 	}
@@ -94,7 +64,6 @@ exports.checkGroup = async (req, res, next) => {
 
 /** Login
  * Issue a jwt if user credentials are valid
- *
  * @param {*} req
  * @param {*} res
  */
@@ -164,3 +133,28 @@ exports.getGroups = async (req, res, next) => {
 	// get app_permit
 	// return for use in checkGroup
 };
+
+/**
+ * Check if the user is in these groups
+ * @param {*} username username of the user preferably from JWT
+ * @param {*} groups list of group_ids permitted to access
+ * @returns
+ */
+async function checkGroup(username, groups) {
+	// Group validation
+	try {
+		let statement =
+			"SELECT g.group_name, g.group_id " +
+			"FROM users u " +
+			"JOIN user_group ug ON u.user_name = ug.user_name " +
+			"JOIN group_list g ON ug.group_id = g.group_id " +
+			"WHERE u.user_name = ?";
+		var [val] = await pool.query(statement, [username]);
+	} catch (dberr) {
+		return false;
+	}
+
+	if (val.some((grp) => groups.includes(grp.group_id))) {
+		return true;
+	}
+}
