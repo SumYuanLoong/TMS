@@ -43,10 +43,25 @@ exports.verifyToken = async (req, res, next) => {
 	}
 
 	let username = decoded.username;
+
+	try {
+		var [val] = await pool.execute(
+			`Select user_name, active from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0 || !val[0].active) {
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
+		}
+	} catch (error) {
+		//console.error(error);
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
 	//req.username = decoded.username;
 
+	//TODO: how to find out allowed groups
+
 	//inserting hardcoded authorised groups
-	//TODO: extraction of allowed groups
+
 	let authGroups = [1, 4];
 	if (checkGroup(username, authGroups)) {
 		next();
