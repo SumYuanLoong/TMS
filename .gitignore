@@ -51,6 +51,16 @@ typings/
 # Output of 'npm pack'
 *.tgz
 
+# Output
+.output
+.vercel
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Yarn Integrity file
 .yarn-integrity
 
@@ -59,3 +69,7 @@ typings/
 
 # next.js build output
 .next
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
