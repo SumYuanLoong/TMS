@@ -40,6 +40,7 @@ exports.verifyToken = async (req, res, next) => {
 	}
 
 	let username = decoded.username;
+	req.username = decoded.username;
 
 	// check if user exists, and is not disabled
 	try {

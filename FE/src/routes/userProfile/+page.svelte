@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { axios } from '$lib/config';
 
 	let username = '';
 	let email = '';
@@ -7,19 +8,13 @@
 	// Function to fetch user data
 	async function fetchUserData() {
 		try {
-			const response = await fetch('https://api.yoursite.com/user/details', {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-					// Add your authentication headers if required
-				}
-			});
-			if (!response.ok) {
+			const response = await axios.get('/users/getOneUser');
+			console.log(response);
+			if (response.status != 200) {
 				throw new Error('Network response was not ok');
 			}
-			const data = await response.json();
-			username = data.username;
-			email = data.email;
+			username = response.data.user.username;
+			email = response.data.user.email;
 		} catch (error) {
 			console.error('Failed to fetch user data:', error);
 		}

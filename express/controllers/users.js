@@ -69,7 +69,7 @@ exports.getAllUser = async (req, res, next) => {
  * @returns
  */
 exports.getOneUser = async (req, res, next) => {
-	const { username } = req.body;
+	const username = req.username;
 
 	//data sanitise
 	if (!username) {
