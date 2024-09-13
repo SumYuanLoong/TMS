@@ -1,21 +1,19 @@
 <script>
-	let users = [
-		{
-			username: 'Username1',
-			password: 'xxxxxxx',
-			email: 'email@test.com',
-			groups: ['Project Lead'],
-			active: true
-		},
-		{
-			username: 'Username2',
-			password: 'xxxxxxx',
-			email: 'email2@test.com',
-			groups: ['Developer'],
-			active: false
+	import { onMount } from 'svelte';
+	import { axios } from '$lib/config';
+	let users = [];
+
+	onMount(async () => {
+		try {
+			const res = await axios.get(`/users/getall`);
+			if (res.data.success) {
+				//save username to stores
+				users = res.data.userList;
+			}
+		} catch (err) {
+			console.log(err);
 		}
-		// Add more users as needed
-	];
+	});
 
 	let newGroups = ''; //change based on what the dropdown requires
 	let newUsername = '';

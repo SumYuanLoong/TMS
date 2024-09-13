@@ -15,11 +15,8 @@ const bcryt = require("bcrypt");
  */
 exports.verifyToken = async (req, res, next) => {
 	// If token exists
-	if (
-		req.headers.authorization &&
-		req.headers.authorization.startsWith("Bearer")
-	) {
-		token = req.headers.authorization.split(" ")[1];
+	if (req.cookies.token) {
+		token = req.cookies.token;
 	} else {
 		// token not found
 		return next(new ErrorObj("Authentication needed", 401, "no token"));
@@ -131,8 +128,7 @@ exports.login = async (req, res, next) => {
 	};
 
 	res.status(200).cookie("token", token, options).json({
-		success: true,
-		token
+		success: true
 	});
 };
 
