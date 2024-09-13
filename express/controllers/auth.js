@@ -44,6 +44,7 @@ exports.verifyToken = async (req, res, next) => {
 
 	let username = decoded.username;
 
+	// check if user exists, and is not disabled
 	try {
 		var [val] = await pool.execute(
 			`Select user_name, active from users where user_name = ?`,
