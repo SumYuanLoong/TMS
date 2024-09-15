@@ -26,7 +26,7 @@ exports.verifyToken = async (req, res, next) => {
 		return next(new ErrorObj("Authentication needed", 401, "no token"));
 	}
 
-	//Check if token is valid
+	//Check token is valid
 	try {
 		var decoded = await jwt.verify(token, process.env.JWT_secret); //if this fails, token expire
 		if (
@@ -34,7 +34,6 @@ exports.verifyToken = async (req, res, next) => {
 			decoded.browser != req.headers["user-agent"] || // user-agent or ip no match
 			decoded.ipaddress != req.ip
 		) {
-			//TODO: proper error handling
 			return next(new ErrorObj("Invalid token", 401, ""));
 		}
 	} catch (error) {
@@ -44,7 +43,6 @@ exports.verifyToken = async (req, res, next) => {
 	}
 
 	let username = decoded.username;
-	req.username = decoded.username;
 
 	// check if user exists, and is not disabled
 	try {
@@ -57,21 +55,20 @@ exports.verifyToken = async (req, res, next) => {
 		}
 	} catch (error) {
 		//console.error(error);
-		return next(new ErrorObj("Invalid Credentials", 401, ""));
+		return next(new ErrorObj("Invalid token", 401, ""));
 	}
-	//req.username = decoded.username;
+	req.username = decoded.username;
 
 	//TODO: how to find out allowed groups
-
-	//inserting hardcoded authorised groups
-
-	let authGroups = [1, 4];
-	if (checkGroup(username, authGroups)) {
-		next();
-	} else {
-		//fail not in group
-		res.status(403).send();
+	if (req.authRole) {
+		if (checkGroup(username, authGroups)) {
+			next();
+		} else {
+			//fail not in group
+			res.status(403).send();
+		}
 	}
+	next();
 };
 
 exports.getGroups = async (req, res, next) => {
@@ -100,7 +97,20 @@ async function checkGroup(username, groups) {
 		return false;
 	}
 
-	if (val.some((grp) => groups.includes(grp.group_id))) {
+	// if any in val/grp matches any id of the input
+	if (val.some((grp) => groups.includes(grp.group_name))) {
 		return true;
+	} else {
+		return false;
 	}
 }
+
+exports.authorizeRoles = (...roles) => {
+	return (req, res, next) => {
+		req.authRole = [];
+		roles.forEach((role) => {
+			req.authRole.push(role);
+		});
+		next();
+	};
+};
