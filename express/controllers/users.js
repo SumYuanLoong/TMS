@@ -1,4 +1,5 @@
 const pool = require("../utils/db");
+const groupC = require("./group");
 const bcrypt = require("bcrypt");
 var ErrorObj = require("../utils/errorMessage");
 
@@ -162,7 +163,11 @@ exports.createUser = async (req, res, next) => {
 			)
 		);
 	}
+
 	// TODO:if have groups, append user_group table
+	if (grouplist.length > 0) {
+		groupC.addGroups(username, grouplist);
+	}
 
 	// return
 	res.status(200).json({

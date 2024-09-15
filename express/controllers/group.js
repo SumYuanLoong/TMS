@@ -1,8 +1,8 @@
-const { use } = require("../routes/users");
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
 
 /**
+ * Create new group
  * TODO: test
  * @param {*} req
  * @param {*} res
@@ -29,7 +29,7 @@ exports.createGroup = async (req, res, next) => {
  */
 exports.getallGroup = async (req, res, next) => {
 	try {
-		let [val] = await pool.execute("select * from group_list");
+		let [val] = await pool.query("select * from group_list");
 
 		res.status(200).json({
 			sucess: true,
@@ -57,8 +57,8 @@ exports.manageGroup = async (req, res, next) => {
 	}
 
 	try {
-		let [val, fields] = await pool.execute(
-			`Select * from users where user_name = ?`,
+		let [val] = await pool.execute(
+			`Select user_name from users where user_name = ?`,
 			[username]
 		);
 		if (val.length == 0) {
@@ -116,7 +116,13 @@ async function removeGroups(user_name, list) {
 	}
 }
 
-async function addGroups(user_name, list) {
+/**
+ * add groups to user
+ * @param {String} user_name
+ * @param {List} list group_ids
+ * @returns
+ */
+exports.addGroups = async (user_name, list) => {
 	try {
 		list.forEach(async (id) => {
 			let [val] = await pool.execute(
@@ -127,4 +133,4 @@ async function addGroups(user_name, list) {
 	} catch (error) {
 		return next(new ErrorObj("Add group error", 500, ""));
 	}
-}
+};
