@@ -5,8 +5,8 @@ const bcryt = require("bcrypt");
 
 /** Login
  * Issue a jwt if user credentials are valid
- * @param {*} req
- * @param {*} res
+ * @param {string} username
+ * @param {string} password
  */
 exports.login = async (req, res, next) => {
 	let { username, password } = req.body;
@@ -66,4 +66,25 @@ exports.login = async (req, res, next) => {
  */
 exports.logout = async (req, res, next) => {
 	res.clearCookie("token").status(200).send();
+};
+
+/**
+ * Method to findout the username
+ */
+exports.who = async (req, res, next) => {
+	let username = req.username;
+	let isAdmin = false;
+
+	//TODO: admin?
+	let [list] = await pool.execute(
+		"select group_id from user_group where user_name = ?",
+		[username]
+	);
+	if (list.includes("admin")) {
+		isAdmin = true;
+	}
+	res.status(200).json({
+		username: username,
+		is_admin: isAdmin
+	});
 };
