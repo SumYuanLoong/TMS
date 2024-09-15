@@ -8,6 +8,7 @@
 			const res = await axios.get(`/users/getall`);
 			if (res.data.success) {
 				//save username to stores
+				console.log(res.data.userList);
 				users = res.data.userList;
 			}
 		} catch (err) {
@@ -77,7 +78,7 @@
 					<td>{user.username}</td>
 					<td>xxxxxxx</td>
 					<td>{user.email}</td>
-					<td>{user.groups.join(', ')}</td>
+					<td>{user.group_names.join(', ')}</td>
 					<td>{user.active ? 'Yes' : 'No'}</td>
 					<td><button on:click={() => editUser(index)}>Edit</button></td>
 				</tr>

@@ -20,7 +20,8 @@ exports.getAllUser = async (req, res, next) => {
 				username: user.user_name,
 				email: user.email,
 				active: user.active,
-				groups: []
+				group_names: [],
+				group_ids: []
 			};
 			userList.push(container);
 		});
@@ -41,10 +42,8 @@ exports.getAllUser = async (req, res, next) => {
 		userList.forEach((user) => {
 			let filtered = val.filter((ug) => ug.user_name == user.username);
 			filtered.forEach((ugf) => {
-				user.groups.push({
-					group_name: ugf.group_name,
-					group_id: ugf.group_id
-				});
+				user.group_names.push(ugf.group_name);
+				user.group_ids.push(ugf.group_id);
 			});
 		});
 	} catch (error) {
