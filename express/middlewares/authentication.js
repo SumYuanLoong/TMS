@@ -61,11 +61,11 @@ exports.verifyToken = async (req, res, next) => {
 
 	//TODO: how to find out allowed groups
 	if (req.authRole) {
-		if (checkGroup(username, req.authRole)) {
+		if (await checkGroup(username, req.authRole)) {
 			return next();
 		} else {
 			//fail not in group
-			res.status(403).send();
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
 		}
 	}
 	next();
@@ -96,13 +96,13 @@ async function checkGroup(username, groups) {
 	} catch (dberr) {
 		return false;
 	}
-
+	val.forEach((obj) => {
+		if (groups.includes(obj.group_name)) {
+			return true;
+		}
+	});
 	// if any in val/grp matches any id of the input
-	if (val.some((grp) => groups.includes(grp.group_name))) {
-		return true;
-	} else {
-		return false;
-	}
+	return false;
 }
 
 exports.authorizeRoles = (...roles) => {

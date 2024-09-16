@@ -54,12 +54,18 @@ exports.manageGroup = async (req, res, next) => {
 	// get list of group user is in
 	let addlist = [];
 	let killlist = [];
+	let holdingList = [];
 
 	// Check user exists
 	if (!username) {
 		return next(new ErrorObj("Empty Username field", 422, ""));
 	}
 
+	if (username == "admin" && !grouplist.includes("admin")) {
+		return next(
+			new ErrorObj("admin cannot be removed from admin group", 400, "")
+		);
+	}
 	try {
 		let [val] = await pool.execute(
 			`Select user_name from users where user_name = ?`,
@@ -77,30 +83,34 @@ exports.manageGroup = async (req, res, next) => {
 	// compare with new list
 	try {
 		let [list] = await pool.execute(
-			"select group_name from user_group where user_name = ?",
+			"select group_name from user_group ug join group_list g on ug.group_id = g.group_id where user_name = ?",
 			[username]
 		);
 
-		// groups not in user_groups
+		list.forEach((g_name) => {
+			holdingList.push(g_name.group_name);
+		});
+
+		// groupslist not in user_groups
 		grouplist.forEach((gID) => {
-			if (!list.includes(gID)) {
+			if (!holdingList.includes(gID)) {
 				addlist.push(gID);
 			}
 		});
 
 		// groups not in grouplist
 		list.forEach((gID) => {
-			if (!grouplist.includes(gID)) {
-				killlist.push(gID);
+			if (!grouplist.includes(gID.group_name)) {
+				killlist.push(gID.group_name);
 			}
 		});
+		await removeGroups(username, killlist);
+		await this.addGroups(username, addlist);
 	} catch (error) {
-		return next(new ErrorObj("Database retrival error", 500, ""));
+		return next(new ErrorObj("Database error", 500, ""));
 	}
 
 	// update with remove and add group functions
-	await removeGroups(username, killlist);
-	await addGroups(username, addlist);
 
 	res.status(200).json({
 		success: true
@@ -108,16 +118,12 @@ exports.manageGroup = async (req, res, next) => {
 };
 
 async function removeGroups(user_name, list) {
-	try {
-		list.forEach(async (id) => {
-			let [val] = await pool.execute(
-				"delete ug from user_group ug JOIN group_list g on ug.group_id = g.group_id where user_name = ? AND g.group_name =  ?",
-				[user_name, id]
-			);
-		});
-	} catch (error) {
-		return next(new ErrorObj("Remove group error", 500, ""));
-	}
+	list.forEach(async (id) => {
+		let [val] = await pool.execute(
+			"delete ug from user_group ug JOIN group_list g on ug.group_id = g.group_id where user_name = ? AND g.group_name =  ?",
+			[user_name, id]
+		);
+	});
 }
 
 /**
@@ -127,19 +133,15 @@ async function removeGroups(user_name, list) {
  * @returns
  */
 exports.addGroups = async (user_name, list) => {
-	try {
-		list.forEach(async (id) => {
-			let [val] = await pool.execute(
-				"select group_id from group_list where group_name = ?",
-				[id]
-			);
+	list.forEach(async (id) => {
+		let [val] = await pool.execute(
+			"select group_id from group_list where group_name = ?",
+			[id]
+		);
 
-			let [val2] = await pool.execute(
-				"insert into user_group (`user_name`, `group_id`) values (?, ?)",
-				[user_name, val.group_id]
-			);
-		});
-	} catch (error) {
-		return next(new ErrorObj("Add group error", 500, ""));
-	}
+		let [val2] = await pool.execute(
+			"insert into user_group (`user_name`, `group_id`) values (?, ?)",
+			[user_name, val[0].group_id]
+		);
+	});
 };

@@ -154,12 +154,6 @@ exports.createUser = async (req, res, next) => {
 	// hash password
 	let hashed = bcrypt.hashSync(password, 10);
 
-	// TODO:if have groups, append user_group table
-	if (grouplist.length > 0) {
-		console.log(grouplist);
-		groupC.addGroups(username, grouplist);
-	}
-
 	// insert into DB
 	try {
 		let [val] = await pool.execute(
@@ -175,6 +169,12 @@ exports.createUser = async (req, res, next) => {
 				""
 			)
 		);
+	}
+
+	// TODO:if have groups, append user_group table
+	if (grouplist.length > 0) {
+		console.log(grouplist);
+		groupC.addGroups(username, grouplist);
 	}
 
 	// return
@@ -293,9 +293,9 @@ exports.updatePassword = async (req, res, next) => {
  * @param {username} username user must be created and not already disabled
  * @returns boolean Success
  */
-exports.killUser = async (req, res, next) => {
+exports.userActive = async (req, res, next) => {
 	// validate inputs
-	const { username } = req.body;
+	const { username, active } = req.body;
 
 	// Check user exists and status
 	if (!username) {
@@ -311,8 +311,6 @@ exports.killUser = async (req, res, next) => {
 		);
 		if (val.length == 0) {
 			return next(new ErrorObj("User not found", 404, ""));
-		} else if (val[0].active == 0) {
-			return next(new ErrorObj("User already disabled", 400, ""));
 		}
 	} catch (err) {
 		return next(
@@ -322,18 +320,17 @@ exports.killUser = async (req, res, next) => {
 	// disable user
 	try {
 		let [val] = await pool.execute(
-			`update users set active = 0 where user_name = ?`,
-			[username]
+			`update users set active = ? where user_name = ?`,
+			[active, username]
 		);
 		if (val.affectedRows == 1) {
 			res.status(200).json({
-				success: true,
-				message: "User disabled"
+				success: true
 			});
 		}
 	} catch (error) {
 		return next(
-			new ErrorObj("Unable to disable user in database", 500, "")
+			new ErrorObj("Unable to change user status in database", 500, "")
 		);
 	}
 };

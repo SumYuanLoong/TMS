@@ -19,11 +19,11 @@ router.post(
 );
 router.patch("/updateEmail", auth.verifyToken, userC.updateEmail);
 router.patch("/updatePassword", auth.verifyToken, userC.updatePassword);
-router.delete(
-	"/",
+router.patch(
+	"/updateActive",
 	auth.authorizeRoles("admin"),
 	auth.verifyToken,
-	userC.killUser
+	userC.userActive
 );
 
 module.exports = router;
