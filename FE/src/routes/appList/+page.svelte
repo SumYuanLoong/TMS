@@ -1,7 +1,7 @@
 <script>
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
-	import { onMount } from '$app/stores';
+	import { onMount } from 'svelte';
 
 	let apps = [
 		{
