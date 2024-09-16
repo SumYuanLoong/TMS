@@ -19,7 +19,7 @@ exports.getAllUser = async (req, res, next) => {
 		val.forEach((user) => {
 			let container = {
 				username: user.user_name,
-				email: user.email,
+				email: user.email || "",
 				active: user.active,
 				group_names: [],
 				group_ids: []

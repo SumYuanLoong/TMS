@@ -18,7 +18,7 @@ router.post(
 	userC.createUser
 );
 router.patch("/updateEmail", auth.verifyToken, userC.updateEmail);
-router.patch("/updatePassword", auth.verifyToken, userC.updateEmail);
+router.patch("/updatePassword", auth.verifyToken, userC.updatePassword);
 router.delete(
 	"/",
 	auth.authorizeRoles("admin"),

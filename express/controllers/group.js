@@ -32,7 +32,7 @@ exports.getallGroup = async (req, res, next) => {
 		let [val] = await pool.query("select * from group_list");
 
 		res.status(200).json({
-			sucess: true,
+			success: true,
 			grouplist: val
 		});
 	} catch (error) {
