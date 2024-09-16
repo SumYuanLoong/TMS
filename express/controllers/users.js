@@ -89,6 +89,7 @@ exports.getOneUser = async (req, res, next) => {
 				email: val[0].email
 			};
 			res.status(200).json({
+				success: true,
 				user
 			});
 		}

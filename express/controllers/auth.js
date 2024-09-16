@@ -84,6 +84,7 @@ exports.who = async (req, res, next) => {
 		isAdmin = true;
 	}
 	res.status(200).json({
+		success: true,
 		username: username,
 		is_admin: isAdmin
 	});

@@ -61,8 +61,8 @@ exports.verifyToken = async (req, res, next) => {
 
 	//TODO: how to find out allowed groups
 	if (req.authRole) {
-		if (checkGroup(username, authGroups)) {
-			next();
+		if (checkGroup(username, req.authRole)) {
+			return next();
 		} else {
 			//fail not in group
 			res.status(403).send();
