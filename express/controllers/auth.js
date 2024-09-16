@@ -65,7 +65,9 @@ exports.login = async (req, res, next) => {
  * so check valid jwt? and clear/invalidate cookie
  */
 exports.logout = async (req, res, next) => {
-	res.clearCookie("token").status(200).send();
+	res.clearCookie("token").status(200).json({
+		success: true
+	});
 };
 
 /**
@@ -77,11 +79,17 @@ exports.who = async (req, res, next) => {
 
 	//TODO: admin?
 	let [list] = await pool.execute(
-		"select group_id from user_group where user_name = ?",
+		"select g.group_name from user_group ug " +
+			"JOIN group_list g ON ug.group_id = g.group_id " +
+			"where ug.user_name = ?",
 		[username]
 	);
-	if (list.includes("admin")) {
-		isAdmin = true;
+	for (let index = 0; index < list.length; index++) {
+		const element = list[index];
+		if (element.group_name.includes("admin")) {
+			isAdmin = true;
+			break;
+		}
 	}
 	res.status(200).json({
 		success: true,

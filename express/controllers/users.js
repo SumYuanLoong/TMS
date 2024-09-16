@@ -106,7 +106,7 @@ exports.getOneUser = async (req, res, next) => {
  * @param {list} groups group_ids, default null
  */
 exports.createUser = async (req, res, next) => {
-	const { username, password, grouplist, email } = req.body;
+	const { username, password, grouplist, email, active } = req.body;
 	// Input Validation regex
 	if (!username || !password) {
 		return next(new ErrorObj("Empty field(s)", 422, ""));
@@ -125,8 +125,14 @@ exports.createUser = async (req, res, next) => {
 	}
 
 	//TODO: email validation
-	if (!email) {
-		// email no match pattern
+	if (email) {
+		console.log(email);
+		const emailRegex = new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g);
+		if (!emailRegex.test(email)) {
+			return next(
+				new ErrorObj("This is not a valid email address", 400, "")
+			);
+		}
 	}
 
 	//check username exists?
@@ -148,11 +154,17 @@ exports.createUser = async (req, res, next) => {
 	// hash password
 	let hashed = bcrypt.hashSync(password, 10);
 
+	// TODO:if have groups, append user_group table
+	if (grouplist.length > 0) {
+		console.log(grouplist);
+		groupC.addGroups(username, grouplist);
+	}
+
 	// insert into DB
 	try {
 		let [val] = await pool.execute(
-			"Insert into `users` (`user_name`, `password`, `email`, `active`) values (?,?,?, 1)",
-			[username, hashed, email || null]
+			"Insert into `users` (`user_name`, `password`, `email`, `active`) values (?,?,?, ?)",
+			[username, hashed, email || null, active]
 		);
 		//Considering checking val if the rows is created as required
 	} catch (error) {
@@ -163,11 +175,6 @@ exports.createUser = async (req, res, next) => {
 				""
 			)
 		);
-	}
-
-	// TODO:if have groups, append user_group table
-	if (grouplist.length > 0) {
-		groupC.addGroups(username, grouplist);
 	}
 
 	// return

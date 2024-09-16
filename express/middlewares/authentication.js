@@ -87,7 +87,7 @@ async function checkGroup(username, groups) {
 	// Group validation
 	try {
 		let statement =
-			"SELECT g.group_name, g.group_id " +
+			"SELECT g.group_name " +
 			"FROM users u " +
 			"JOIN user_group ug ON u.user_name = ug.user_name " +
 			"JOIN group_list g ON ug.group_id = g.group_id " +

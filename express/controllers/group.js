@@ -11,6 +11,10 @@ var ErrorObj = require("../utils/errorMessage");
  */
 exports.createGroup = async (req, res, next) => {
 	let { groupname } = req.body;
+	if (!groupname) {
+		return next(new ErrorObj("Groupname is empty", 400, ""));
+	}
+
 	try {
 		let [val] = await pool.execute(
 			"insert into group_list (group_name) values (?)",
@@ -21,7 +25,7 @@ exports.createGroup = async (req, res, next) => {
 			sucess: true
 		});
 	} catch (error) {
-		return next(new ErrorObj("Unable to create group", 500, ""));
+		return next(new ErrorObj("group already exists", 500, ""));
 	}
 };
 /** used when populating dropdown lists
@@ -29,7 +33,7 @@ exports.createGroup = async (req, res, next) => {
  */
 exports.getallGroup = async (req, res, next) => {
 	try {
-		let [val] = await pool.query("select * from group_list");
+		let [val] = await pool.query("select group_name from group_list");
 
 		res.status(200).json({
 			success: true,
@@ -43,7 +47,7 @@ exports.getallGroup = async (req, res, next) => {
 /** Called directly by API after dropdown change for user management
  * TODO: test
  * @param {string} username
- * @param {List of int} grouplist selected group_ids
+ * @param {List} grouplist selected group_names
  */
 exports.manageGroup = async (req, res, next) => {
 	let { username, grouplist } = req.body;
@@ -73,7 +77,7 @@ exports.manageGroup = async (req, res, next) => {
 	// compare with new list
 	try {
 		let [list] = await pool.execute(
-			"select group_id from user_group where user_name = ?",
+			"select group_name from user_group where user_name = ?",
 			[username]
 		);
 
@@ -107,7 +111,7 @@ async function removeGroups(user_name, list) {
 	try {
 		list.forEach(async (id) => {
 			let [val] = await pool.execute(
-				"delete from user_group where user_name = ? and group_id = ?",
+				"delete ug from user_group ug JOIN group_list g on ug.group_id = g.group_id where user_name = ? AND g.group_name =  ?",
 				[user_name, id]
 			);
 		});
@@ -126,8 +130,13 @@ exports.addGroups = async (user_name, list) => {
 	try {
 		list.forEach(async (id) => {
 			let [val] = await pool.execute(
+				"select group_id from group_list where group_name = ?",
+				[id]
+			);
+
+			let [val2] = await pool.execute(
 				"insert into user_group (`user_name`, `group_id`) values (?, ?)",
-				[user_name, id]
+				[user_name, val.group_id]
 			);
 		});
 	} catch (error) {
