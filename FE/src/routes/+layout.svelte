@@ -72,7 +72,7 @@
 		margin: 20px;
 	}
 	nav {
-		background-color: grey;
+		background-color: #d9d9d9;
 		padding: 10px;
 	}
 	img {
@@ -125,6 +125,7 @@
 		--toastContainerLeft: 2rem;
 		--toastBackground: #4bb543;
 		--toastBarBackground: #3b8f35;
+		--toastBarHeight: 0;
 	}
 
 	:global(.error-toast) {

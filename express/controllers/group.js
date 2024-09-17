@@ -13,7 +13,7 @@ exports.createGroup = async (req, res, next) => {
 	let { groupname } = req.body;
 
 	const groupRgex = new RegExp(/^[\w]+$/g);
-	if (!groupRgex.test(user)) {
+	if (!groupRgex.test(groupname)) {
 		return next(new ErrorObj("Username is invalid", 400, ""));
 	}
 
@@ -28,7 +28,7 @@ exports.createGroup = async (req, res, next) => {
 		);
 
 		res.status(200).json({
-			sucess: true
+			success: true
 		});
 	} catch (error) {
 		return next(new ErrorObj("group already exists", 500, ""));

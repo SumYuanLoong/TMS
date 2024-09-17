@@ -4,9 +4,12 @@
 	import MultiSelect from 'svelte-multiselect';
 	import { goto } from '$app/navigation';
 	import { toast } from '@zerodevx/svelte-toast';
+	import Modal from '$lib/Modal.svelte';
 
 	let users = [];
 	let groups = [];
+
+	let showModal = false;
 
 	let loaded = false;
 	async function loadValues() {
@@ -55,7 +58,7 @@
 	let editPass = '';
 	let editActive = true;
 	let editGroup = [];
-
+	let newGroup = '';
 	async function createUser() {
 		// check password
 		if (!newUsername || !newPassword) {
@@ -113,14 +116,31 @@
 		toast.push('user created', { duration: 3000 });
 	}
 
-	function addGroup() {
-		groups = [
-			...groups,
-			{
-				label: 'kkk',
-				value: 5
+	async function addGroup(event) {
+		const groupRgex = new RegExp(/^[\w]+$/g);
+
+		newGroup = event.detail.groupname;
+
+		if (newGroup) {
+			console.log('test');
+			if (!groupRgex.test(newGroup)) {
+				toast.push('Invalid group name', { classes: ['error-toast'], duration: 3000 });
+				return 0;
 			}
-		];
+		} else {
+			return 0;
+		}
+		try {
+			const res = await axios.post(`/groups`, {
+				groupname: newGroup
+			});
+			if (res.data.success) {
+				groups = [...groups, newGroup];
+				toast.push(newGroup + ' added to groups', { duration: 3000 });
+			}
+		} catch (error) {
+			toast.push('Error adding group', { classes: ['error-toast'], duration: 3000 });
+		}
 	}
 
 	function editUser(index) {
@@ -269,20 +289,27 @@
 <div style="margin: 10px;">
 	<!-- Create New Group Button -->
 	<h2>User Management</h2>
-	<button class="outerBtn" on:click={addGroup} style="float: right; margin-right:20px"
-		>Create New Group</button
+
+	<button
+		class="outerBtn"
+		on:click={() => (showModal = true)}
+		style="float: right; margin-right:20px">Create New Group</button
 	>
 
+	<Modal bind:showModal on:newgroup_name={addGroup}>
+		<h2 slot="header">Create group</h2>
+	</Modal>
+
 	<!-- User Table -->
-	<table class="user-table">
+	<table class="user-table" style="">
 		<thead>
 			<tr>
-				<th style="width: 10%;">Username</th>
-				<th style="width: 10%;">Password</th>
-				<th style="width: 12%;">Email</th>
+				<th style="width: 15%;">Username</th>
+				<th style="width: 15%;">Password</th>
+				<th style="width: 18%;">Email</th>
 				<th>Groups</th>
-				<th style="width: 5%;">Active</th>
-				<th style="width: 10%;">Action</th>
+				<th style="width: 8%;">Active</th>
+				<th style="width: 15%;">Action</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -296,7 +323,6 @@
 								type="password"
 								on:change={(e) => (passTouch = true)}
 								bind:value={editPass}
-								placeholder={user.password}
 							/></td
 						>
 					{:else}
@@ -306,7 +332,7 @@
 					{#if editing === index}
 						<td
 							><input
-								type="password"
+								type="text"
 								on:change={(e) => (emailTouch = true)}
 								bind:value={editEmail}
 								placeholder={user.email}
@@ -330,7 +356,7 @@
 
 					{#if editing === index}
 						<td>
-							<select bind:value={editActive} on:change={activeTouch}>
+							<select bind:value={editActive} on:change={(e) => (activeTouch = true)}>
 								<option value={true}>Yes</option>
 								<option value={false}>No</option>
 							</select>
@@ -352,7 +378,7 @@
 	</table>
 	<h3>Create new User</h3>
 	<form on:submit|preventDefault={createUser}>
-		<input type="text" placeholder="Username" bind:value={newUsername} />
+		<input autofocus type="text" placeholder="Username" bind:value={newUsername} />
 		<input type="password" placeholder="Password" bind:value={newPassword} />
 		<input type="text" placeholder="Email" bind:value={newEmail} />
 		{#if loaded}<MultiSelect
@@ -364,7 +390,7 @@
 			<option value={true}>Yes</option>
 			<option value={false}>No</option>
 		</select>
-		<button class="outerBtn">Create User</button>
+		<button class="outerBtn" type="submit">Create User</button>
 	</form>
 </div>
 
@@ -372,9 +398,6 @@
 	.user-table {
 		width: 100%;
 		box-sizing: border-box;
-	}
-
-	.user-table {
 		border-collapse: collapse;
 		margin-bottom: 20px;
 	}
@@ -397,6 +420,7 @@
 		padding: 10px;
 		cursor: pointer;
 		margin: 5px;
+		border-radius: 5px;
 	}
 
 	form {
