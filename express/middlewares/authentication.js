@@ -96,11 +96,12 @@ async function checkGroup(username, groups) {
 	} catch (dberr) {
 		return false;
 	}
-	val.forEach((obj) => {
-		if (groups.includes(obj.group_name)) {
+	for (let index = 0; index < val.length; index++) {
+		const element = val[index];
+		if (groups.includes(element.group_name)) {
 			return true;
 		}
-	});
+	}
 	// if any in val/grp matches any id of the input
 	return false;
 }
