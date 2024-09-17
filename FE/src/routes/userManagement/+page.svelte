@@ -3,6 +3,8 @@
 	import { axios } from '$lib/config';
 	import MultiSelect from 'svelte-multiselect';
 	import { goto } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
+
 	let users = [];
 	let groups = [];
 
@@ -26,7 +28,7 @@
 			if (err.response.data.message == 'Invalid Credentials') {
 				goto('/login');
 			}
-			console.log(err);
+			toast.push(err.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -57,12 +59,15 @@
 	async function createUser() {
 		// check password
 		if (!newUsername || !newPassword) {
-			alert('Username or Password field empty');
+			toast.push('Username or Password field empty', { classes: ['error-toast'], duration: 3000 });
 			return 0;
 		}
 		const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
 		if (!regex.test(newPassword)) {
-			alert(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`);
+			toast.push(`Please ensure password is aplhanumeric with symbols from 8 to 10 characters`, {
+				classes: ['error-toast'],
+				duration: 8000
+			});
 			return 0;
 		}
 		let groupsArray = [];
@@ -96,7 +101,7 @@
 			if (err.response.data.message == 'Invalid Credentials') {
 				goto('/login');
 			}
-			alert(err.response.data.message);
+			toast.push(err.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			return 0;
 		}
 		// Reset form fields
@@ -105,7 +110,7 @@
 		newEmail = '';
 		newGroups = [];
 		newActive = true;
-		alert('user created');
+		toast.push('user created', { duration: 3000 });
 	}
 
 	function addGroup() {
@@ -129,6 +134,25 @@
 
 	async function saveUser(index) {
 		let editingUser = users[index];
+		let msgBuffer = [];
+
+		const emailRegex = new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g);
+		const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
+
+		if (emailTouch && !emailRegex.test(editEmail)) {
+			toast.push('This is not a valid email address', {
+				classes: ['error-toast'],
+				duration: 3000
+			});
+			return 0;
+		} else if (passTouch && !regex.test(newPassword)) {
+			toast.push(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`, {
+				classes: ['error-toast'],
+				duration: 8000
+			});
+			return 0;
+		}
+
 		if (emailTouch) {
 			try {
 				const res = await axios.patch('/users/updateEmail', {
@@ -136,15 +160,14 @@
 					email: editEmail
 				});
 				if (res.data.success) {
-					console.log(res.data);
 					editingUser.email = editEmail;
-					alert('email changed');
+					msgBuffer.push('Email');
 				}
 			} catch (error) {
 				if (err.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
-				alert('email not changed');
+				toast.push('email not changed', { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 		if (passTouch) {
@@ -154,47 +177,73 @@
 					password: editPass
 				});
 				if (res.data.success) {
-					alert('password changed');
+					msgBuffer.push('Password');
 				}
 			} catch (error) {
 				if (err.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
-				alert('password not changed');
+				toast.push('password not changed', { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 		if (groupTouch) {
 			try {
-				const res = await axios.put('/groups', {
-					username: editingUser.username,
-					grouplist: editingUser.group_names
-				});
-				if (res.data.success) {
-					alert('groups changed');
+				if (editingUser.username == 'admin' && !editingUser.group_names.includes('admin')) {
+					toast.push('"admin" must always be in admin gorup', {
+						classes: ['error-toast'],
+						duration: 3000
+					});
+				} else {
+					const res = await axios.put('/groups', {
+						username: editingUser.username,
+						grouplist: editingUser.group_names
+					});
+					if (res.data.success) {
+						msgBuffer.push('Groups');
+					}
 				}
 			} catch (err) {
 				if (err.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
-				alert('groups not changed');
+				toast.push('groups not changed', { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 
 		if (activeTouch) {
 			try {
-				const res = await axios.patch('/users/updateActive', {
-					username: editingUser.username,
-					active: editActive
-				});
-				if (res.data.success) {
-					alert('active changed');
+				if (editingUser.username == 'admin' && !editActive) {
+					toast.push('"admin" must always be active', {
+						classes: ['error-toast'],
+						duration: 3000
+					});
+				} else {
+					const res = await axios.patch('/users/updateActive', {
+						username: editingUser.username,
+						active: editActive
+					});
+					if (res.data.success) {
+						msgBuffer.push('Active');
+					}
 				}
 			} catch (err) {
 				if (err.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
-				alert('active not changed');
+				toast.push('active not changed', { classes: ['error-toast'], duration: 3000 });
 			}
+		}
+		if (msgBuffer.length > 0) {
+			let con = '';
+			for (let index = 0; index < msgBuffer.length; index++) {
+				const msg = msgBuffer[index];
+				con = con + msg + ', ';
+				if (index == msgBuffer.length) {
+					con = con + msg;
+				}
+			}
+			con = con + 'has been updated';
+			toast.push(con, { duration: 3000 });
 		}
 
 		editing = null;
@@ -217,7 +266,7 @@
 	}
 </script>
 
-<div>
+<div style="margin: 10px;">
 	<!-- Create New Group Button -->
 	<h2>User Management</h2>
 	<button class="outerBtn" on:click={addGroup} style="float: right; margin-right:20px"
@@ -257,7 +306,7 @@
 					{#if editing === index}
 						<td
 							><input
-								type="text"
+								type="password"
 								on:change={(e) => (emailTouch = true)}
 								bind:value={editEmail}
 								placeholder={user.email}

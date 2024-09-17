@@ -1,6 +1,7 @@
 <script>
 	import { axios } from '$lib/config';
 	import { goto } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
 	let username = '';
 	let password = '';
 
@@ -8,7 +9,7 @@
 		console.log('Login attempt with:', { username, password });
 
 		if (!username || !password) {
-			console.log('field is empty');
+			toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 		} else {
 			try {
 				const res = await axios.post(`http://localhost:3000/auth/login`, {
@@ -19,10 +20,10 @@
 					console.log(res.data);
 					goto('/appList');
 				} else {
-					console.log(res);
+					toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 				}
 			} catch (err) {
-				console.log(err);
+				toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 	};

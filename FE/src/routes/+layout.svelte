@@ -3,10 +3,10 @@
 	import { afterUpdate, onMount } from 'svelte';
 	import { axios } from '$lib/config';
 	import { goto } from '$app/navigation';
+	import { SvelteToast } from '@zerodevx/svelte-toast';
 
 	let username = '';
 	let pass = false;
-	let isDropdownOpen = false;
 	let isAdmin = false;
 	let pagename = 'App List';
 
@@ -38,11 +38,12 @@
 		}
 	});
 
-	function updateParentVariable(newVal) {
-		parentVariable = newVal;
-	}
+	// function updateParentVariable(newVal) {
+	// 	parentVariable = newVal;
+	// }
 </script>
 
+<SvelteToast />
 {#if pass}
 	{#if $page.url.pathname.startsWith('/login') || $page.url.pathname.startsWith('/logout')}
 		<slot />
@@ -116,5 +117,18 @@
 		padding: 12px 16px;
 		text-decoration: none;
 		display: block;
+	}
+	:root {
+		--toastContainerTop: auto;
+		--toastContainerRight: auto;
+		--toastContainerBottom: 2rem;
+		--toastContainerLeft: 2rem;
+		--toastBackground: #4bb543;
+		--toastBarBackground: #3b8f35;
+	}
+
+	:global(.error-toast) {
+		--toastBackground: #ff1a1a;
+		--toastBarBackground: #e60000;
 	}
 </style>

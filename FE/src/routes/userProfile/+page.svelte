@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { axios } from '$lib/config';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	let username = 'placeholder username';
 	let email = 'placeholder email';
@@ -27,25 +28,32 @@
 	});
 
 	async function handleEmail() {
-		try {
-			const res = await axios.patch('/users/updateEmail', {
-				username: username,
-				email: newEmail
-			});
-			if (res.data.success) {
-				console.log(res.data);
-				email = newEmail;
-				alert('email changed');
+		const emailRegex = new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g);
+		if (!emailRegex.test(email)) {
+			toast.push('email not changed', { classes: ['error-toast'], duration: 3000 });
+		} else {
+			try {
+				const res = await axios.patch('/users/updateEmail', {
+					username: username,
+					email: newEmail
+				});
+				if (res.data.success) {
+					email = newEmail;
+					toast.push('email successfully changed', { duration: 3000 });
+				}
+			} catch (error) {
+				toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			}
-		} catch (error) {
-			alert('email not changed');
 		}
 	}
 
 	async function handlePassword() {
 		const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
 		if (!regex.test(newPassword)) {
-			alert(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`);
+			toast.push(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`, {
+				classes: ['error-toast'],
+				duration: 8000
+			});
 		} else {
 			try {
 				const response = await axios.patch('/users/updatePassword', {
@@ -53,12 +61,10 @@
 					password: newPassword
 				});
 				if (response.data.success) {
-					console.log(response.data);
-					alert('password changed');
+					toast.push('Password successfully changed', { duration: 3000 });
 				}
 			} catch (err) {
-				console.log(err);
-				alert('password not changed');
+				toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 	}
