@@ -11,6 +11,12 @@ var ErrorObj = require("../utils/errorMessage");
  */
 exports.createGroup = async (req, res, next) => {
 	let { groupname } = req.body;
+
+	const groupRgex = new RegExp(/^[\w]+$/g);
+	if (!groupRgex.test(user)) {
+		return next(new ErrorObj("Username is invalid", 400, ""));
+	}
+
 	if (!groupname) {
 		return next(new ErrorObj("Groupname is empty", 400, ""));
 	}
@@ -104,13 +110,13 @@ exports.manageGroup = async (req, res, next) => {
 				killlist.push(gID.group_name);
 			}
 		});
+
+		// update with remove and add group functions
 		await removeGroups(username, killlist);
 		await this.addGroups(username, addlist);
 	} catch (error) {
 		return next(new ErrorObj("Database error", 500, ""));
 	}
-
-	// update with remove and add group functions
 
 	res.status(200).json({
 		success: true

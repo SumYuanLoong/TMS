@@ -112,6 +112,11 @@ exports.createUser = async (req, res, next) => {
 		return next(new ErrorObj("Empty field(s)", 422, ""));
 	}
 
+	const userRgex = new RegExp(/^[a-zA-Z0-9]+$/g);
+	if (!userRgex.test(user)) {
+		return next(new ErrorObj("Username is invalid", 400, ""));
+	}
+
 	// check password meets requirements ((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})
 	const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
 	if (!regex.test(password)) {
