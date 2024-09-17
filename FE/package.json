@@ -31,6 +31,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@zerodevx/svelte-toast": "^0.9.5",
 		"axios": "^1.7.7",
 		"svelte-multiselect": "^10.3.0"
 	}
