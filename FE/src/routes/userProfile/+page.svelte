@@ -29,7 +29,7 @@
 
 	async function handleEmail() {
 		const emailRegex = new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g);
-		if (!emailRegex.test(email)) {
+		if (!emailRegex.test(newEmail)) {
 			toast.push('email not changed', { classes: ['error-toast'], duration: 3000 });
 		} else {
 			try {
@@ -50,7 +50,7 @@
 	async function handlePassword() {
 		const regex = new RegExp(/((?=.*\d)(?=.*[a-zA-Z])(?=.*[\W\_]).{8,10})/g);
 		if (!regex.test(newPassword)) {
-			toast.push(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`, {
+			toast.push(`Please ensure password is alphanumeric with symbols from 8 to 10 charactes`, {
 				classes: ['error-toast'],
 				duration: 8000
 			});
@@ -64,7 +64,7 @@
 					toast.push('Password successfully changed', { duration: 3000 });
 				}
 			} catch (err) {
-				toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
+				toast.push(err.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			}
 		}
 	}

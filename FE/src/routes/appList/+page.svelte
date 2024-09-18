@@ -1,8 +1,4 @@
 <script>
-	import axios from 'axios';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-
 	let apps = [
 		{
 			id: 1,

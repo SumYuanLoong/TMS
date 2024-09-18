@@ -8,10 +8,10 @@
 
 	let users = [];
 	let groups = [];
-
 	let showModal = false;
-
 	let loaded = false;
+	let usernameInput;
+
 	async function loadValues() {
 		try {
 			const Gres = await axios.get('/groups/getAll');
@@ -40,11 +40,13 @@
 		loaded = true;
 	});
 
-	let newGroups = []; //change based on what the dropdown requires
+	//fields for new inputs
+	let newGroups = [];
 	let newUsername = '';
 	let newPassword = '';
 	let newEmail = '';
 	let newActive = true;
+	let newGroup = '';
 
 	// Flags to check if fields are touched
 	let emailTouch = false;
@@ -53,12 +55,11 @@
 	let groupTouch = false;
 	let editing = null;
 
-	// Flags to check if fields are touched
+	// fields for edit inputs
 	let editEmail = '';
 	let editPass = '';
 	let editActive = true;
 	let editGroup = [];
-	let newGroup = '';
 	async function createUser() {
 		// check password
 		if (!newUsername || !newPassword) {
@@ -114,6 +115,7 @@
 		newGroups = [];
 		newActive = true;
 		toast.push('user created', { duration: 3000 });
+		usernameInput.focus();
 	}
 
 	async function addGroup(event) {
@@ -139,7 +141,7 @@
 				toast.push(newGroup + ' added to groups', { duration: 3000 });
 			}
 		} catch (error) {
-			toast.push('Error adding group', { classes: ['error-toast'], duration: 3000 });
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -165,15 +167,15 @@
 				duration: 3000
 			});
 			return 0;
-		} else if (passTouch && !regex.test(newPassword)) {
-			toast.push(`Please ensure password is aplhanumeric with symbols from 8 to 10 charactes`, {
+		} else if (passTouch && !regex.test(editPass)) {
+			toast.push(`Please ensure password is alphanumeric with symbols from 8 to 10 charactes`, {
 				classes: ['error-toast'],
 				duration: 8000
 			});
 			return 0;
 		}
 
-		if (emailTouch) {
+		if (emailTouch && editEmail) {
 			try {
 				const res = await axios.patch('/users/updateEmail', {
 					username: editingUser.username,
@@ -184,13 +186,13 @@
 					msgBuffer.push('Email');
 				}
 			} catch (error) {
-				if (err.response.data.message == 'Invalid Credentials') {
+				if (error.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
 				toast.push('email not changed', { classes: ['error-toast'], duration: 3000 });
 			}
 		}
-		if (passTouch) {
+		if (passTouch && editPass) {
 			try {
 				const res = await axios.patch('/users/updatePassword', {
 					username: editingUser.username,
@@ -200,7 +202,7 @@
 					msgBuffer.push('Password');
 				}
 			} catch (error) {
-				if (err.response.data.message == 'Invalid Credentials') {
+				if (error.response.data.message == 'Invalid Credentials') {
 					goto('/login');
 				}
 				toast.push('password not changed', { classes: ['error-toast'], duration: 3000 });
@@ -209,7 +211,7 @@
 		if (groupTouch) {
 			try {
 				if (editingUser.username == 'admin' && !editingUser.group_names.includes('admin')) {
-					toast.push('"admin" must always be in admin gorup', {
+					toast.push('"admin" must always be in admin group', {
 						classes: ['error-toast'],
 						duration: 3000
 					});
@@ -301,7 +303,7 @@
 	</Modal>
 
 	<!-- User Table -->
-	<table class="user-table" style="">
+	<table class="user-table">
 		<thead>
 			<tr>
 				<th style="width: 15%;">Username</th>
@@ -378,7 +380,7 @@
 	</table>
 	<h3>Create new User</h3>
 	<form on:submit|preventDefault={createUser}>
-		<input autofocus type="text" placeholder="Username" bind:value={newUsername} />
+		<input type="text" placeholder="Username" bind:value={newUsername} bind:this={usernameInput} />
 		<input type="password" placeholder="Password" bind:value={newPassword} />
 		<input type="text" placeholder="Email" bind:value={newEmail} />
 		{#if loaded}<MultiSelect
@@ -400,6 +402,7 @@
 		box-sizing: border-box;
 		border-collapse: collapse;
 		margin-bottom: 20px;
+		max-height: 80vh;
 	}
 
 	th,
