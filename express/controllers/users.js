@@ -113,7 +113,7 @@ exports.createUser = async (req, res, next) => {
 	}
 
 	const userRgex = new RegExp(/^[a-zA-Z0-9]+$/g);
-	if (!userRgex.test(user)) {
+	if (!userRgex.test(username)) {
 		return next(new ErrorObj("Username is invalid", 400, ""));
 	}
 

@@ -31,7 +31,7 @@ exports.createGroup = async (req, res, next) => {
 			success: true
 		});
 	} catch (error) {
-		return next(new ErrorObj("group already exists", 500, ""));
+		return next(new ErrorObj("group already exists", 400, ""));
 	}
 };
 /** used when populating dropdown lists
