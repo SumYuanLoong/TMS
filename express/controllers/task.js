@@ -4,7 +4,6 @@
 
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
-const groupC = require("./group");
 
 /**
  * Gets all tasks of the Specific app
@@ -17,7 +16,7 @@ exports.getAllTask = async (req, res, next) => {
 	if (!app_name) {
 		try {
 			let [vals] = await pool.query(
-				"select task_name, task_description from task where task_app_acronym = ?",
+				"select task_name, task_description, task_owner from task where task_app_acronym = ?",
 				[app_name]
 			);
 			res.status(200).json({
@@ -48,8 +47,49 @@ exports.updateTask = async (req, res, next) => {};
 
 /**
  * Create task
+ * need check for same name within 1 app
+ * TODO: transaction
  * @param {*} req
  * @param {*} res
  * @param {*} next
  */
-exports.createTask = async (req, res, next) => {};
+exports.createTask = async (req, res, next) => {
+	//something or the others
+	let { task_id, task_name, task_description } = req.body;
+
+	const createDate = Date.now();
+	let token = req.cookies.token;
+	let decoded = await jwt.verify(token, process.env.JWT_secret);
+	let username = decoded.username;
+
+	pool.query("start transaction");
+
+	//get app_Rnumber
+	//increment it
+	//
+	try {
+		let [val] = await pool.execute(
+			"insert into `task` (`task_id`, `task_name`, `task_description`, `task_state`, `task_creator`, `task_owner`, `task_createDate` ) values (?,?,?,?,?)",
+			[
+				task_id,
+				task_name,
+				task_description,
+				"Open",
+				username,
+				username,
+				createDate
+			]
+		);
+
+		let [val2] = await pool.execute(
+			"Update app_Rnumber from app where app_acronym = ?",
+			[Rnum, app_name]
+		);
+		pool.query("commit");
+		res.status.json({
+			success: true
+		});
+	} catch (error) {
+		return next("error with insertion");
+	}
+};

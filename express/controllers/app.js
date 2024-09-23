@@ -4,7 +4,6 @@
 
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
-const groupC = require("./group");
 
 /**
  * Gets all apps
