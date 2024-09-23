@@ -5,21 +5,28 @@
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
-	let planName = '';
+
+	let app_name = '';
+	let rNumber = 0;
+	let description = '';
 	let startDate = '';
 	let endDate = '';
-	let color = '';
 
 	$: if (dialog && showModal) dialog.showModal();
 
 	function btnClick() {
 		dispatch('newApp', {
-			planName: planName
+			app_name: app_name,
+			rNumber: rNumber,
+			description: description,
+			startDate: startDate,
+			endDate: endDate
 		});
-		planName = '';
+		app_name = '';
 		startDate = '';
 		endDate = '';
-		color = '';
+		rNumber = 0;
+		description = '';
 	}
 </script>
 
@@ -35,15 +42,15 @@
 		<form on:submit|preventDefault={btnClick}>
 			<div>
 				<label for="new group name">Acronym:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={planName} />
+				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={app_name} />
 			</div>
 			<div>
 				<label for="new group name"> Description:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={startDate} />
+				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={description} />
 			</div>
 			<div>
 				<label for="new group name">R Number:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={endDate} />
+				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={rNumber} />
 			</div>
 			<div>
 				<label for="new group name">Start Date:</label> <br />
@@ -78,13 +85,13 @@
 
 <style>
 	dialog {
-		max-width: 36em;
+		max-width: 48em;
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 800px;
-		height: 300px;
+		width: 1200px;
+		height: 36em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);

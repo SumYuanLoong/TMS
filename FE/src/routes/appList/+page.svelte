@@ -1,21 +1,46 @@
 <script>
 	import AppModal from '$lib/AppModal.svelte';
+	import { axios } from '$lib/config';
 
 	let showModal = false;
 
 	async function addApp(event) {
-		let newApp_name = event.detail.appname
+		let app_name = event.detail.app_name;
+		let rNumber = event.detail.rNumber;
+		//TODO: validate app_name
+		//TODO: validate rNumber
+
+		try {
+			let res = await axios.post('/tms/apps/create', {
+				app_acronym: app_name,
+				R_number: rNumber,
+				description: event.detail.description,
+				startDate: event.detail.startDate,
+				endDate: event.detail.endDate
+			});
+			if (res.data.success) {
+				apps = [
+					...apps,
+					{
+						name: app_name,
+						description: event.detail.description,
+						number: rNumber
+					}
+				];
+			}
+		} catch (error) {}
 	}
+
+	
+
 	let apps = [
 		{
-			id: 1,
 			name: '<App_Acronym>',
 			description:
 				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Some random description......',
 			number: '<number>'
 		},
 		{
-			id: 2,
 			name: 'App name 2',
 			description:
 				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Some random description......',
@@ -33,12 +58,12 @@
 		<button on:click={() => (showModal = true)}>Create app</button>
 	</div>
 	<div class="app-list">
-		{#each apps as app}
+		{#each apps as app, index}
 			<div class="app-card">
 				<h2>{app.name}</h2>
 				<p>{app.description}</p>
 				<p>{app.number}</p>
-				<button on:click={() => console.log(`Viewing app ${app.id}`)}>View</button>
+				<button on:click={() => console.log(`Viewing app ${index}`)}>View</button>
 			</div>
 		{/each}
 	</div>

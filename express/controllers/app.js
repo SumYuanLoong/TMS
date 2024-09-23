@@ -116,13 +116,13 @@ exports.createApp = async (req, res, next) => {
 
 	/**
 	 * checks to do
-	 * mandatory app_acronm, R_number, startDate, endDate
+	 * mandatory app_acronym, R_number, startDate, endDate
 	 * check format and validity of the start and end date
 	 * If app_acronym already exists
 	 */
 
 	if (!app_acronym || !R_number || !description || !startDate || !endDate) {
-		return next("Required fields are missings");
+		console.log("Required fields are missings");
 	}
 
 	try {
@@ -143,8 +143,9 @@ exports.createApp = async (req, res, next) => {
 		return next(new ErrorObj("Database error", 500, ""));
 	}
 
+	R_number = Number.parseInt(R_number);
 	if (!Number.isInteger(R_number)) {
-		return next("R_number provided is not a whole number");
+		console.log("R_number provided is not a whole number");
 	}
 
 	try {
@@ -152,10 +153,10 @@ exports.createApp = async (req, res, next) => {
 			"insert into `application` (`app_acronym`, `app_description`, `app_Rnumber`, `app_startDate`, `app_endDate` ) values (?,?,?,?,?)",
 			[app_acronym, description, R_number, startDate, endDate]
 		);
-		res.status.json({
+		res.status(200).json({
 			success: true
 		});
 	} catch (error) {
-		return next("error with insertion");
+		console.log("error with insertion");
 	}
 };
