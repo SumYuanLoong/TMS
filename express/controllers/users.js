@@ -2,6 +2,7 @@ const pool = require("../utils/db");
 const groupC = require("./group");
 const bcrypt = require("bcrypt");
 var ErrorObj = require("../utils/errorMessage");
+const jwt = require("jsonwebtoken");
 
 /**
  * Gets all users with groups that they belong in
