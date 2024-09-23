@@ -74,7 +74,9 @@ exports.logout = async (req, res, next) => {
  * Method to findout the username
  */
 exports.who = async (req, res, next) => {
-	let username = req.username;
+	let token = req.cookies.token;
+	let decoded = await jwt.verify(token, process.env.JWT_secret);
+	let username = decoded.username;
 	let isAdmin = false;
 
 	//TODO: admin?

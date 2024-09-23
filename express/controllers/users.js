@@ -69,7 +69,9 @@ exports.getAllUser = async (req, res, next) => {
  * @returns
  */
 exports.getOneUser = async (req, res, next) => {
-	const username = req.username;
+	let token = req.cookies.token;
+	let decoded = await jwt.verify(token, process.env.JWT_secret);
+	let username = decoded.username;
 
 	//data sanitise
 	if (!username) {
