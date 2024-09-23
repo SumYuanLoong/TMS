@@ -3,13 +3,6 @@ var ErrorObj = require("../utils/errorMessage");
 const jwt = require("jsonwebtoken");
 
 /**
- * other way to get token
- * if (req.cookies.token) {
-		console.log(req.cookies.token);
-	}
- */
-
-/**
  * Verifies JWT then check group user is part of
  * the authorised group
  * @param {*} req
@@ -57,24 +50,8 @@ exports.verifyToken = async (req, res, next) => {
 		//console.error(error);
 		return next(new ErrorObj("Invalid token", 401, ""));
 	}
-	req.username = decoded.username;
 
-	//TODO: how to find out allowed groups
-	if (req.authRole) {
-		if (await checkGroup(username, req.authRole)) {
-			return next();
-		} else {
-			//fail not in group
-			return next(new ErrorObj("Invalid Credentials", 401, ""));
-		}
-	}
 	next();
-};
-
-exports.getGroups = async (req, res, next) => {
-	// to get the app of the task
-	// get app_permit
-	// return for use in checkGroup
 };
 
 /**
@@ -83,7 +60,7 @@ exports.getGroups = async (req, res, next) => {
  * @param {*} groups list of group_ids permitted to access
  * @returns
  */
-async function checkGroup(username, groups) {
+async function checkGroup(username, group) {
 	// Group validation
 	try {
 		let statement =
@@ -98,7 +75,7 @@ async function checkGroup(username, groups) {
 	}
 	for (let index = 0; index < val.length; index++) {
 		const element = val[index];
-		if (groups.includes(element.group_name)) {
+		if (group.includes(element.group_name)) {
 			return true;
 		}
 	}
@@ -106,12 +83,67 @@ async function checkGroup(username, groups) {
 	return false;
 }
 
-exports.authorizeRoles = (...roles) => {
-	return (req, res, next) => {
-		req.authRole = [];
-		roles.forEach((role) => {
-			req.authRole.push(role);
-		});
-		next();
+/**
+ * This is used for routes that use hardcoded group names
+ * @param  {...any} roles
+ * @returns
+ */
+exports.authorizedForRoles = (...roles) => {
+	return async (req, res, next) => {
+		let token = req.cookies.token;
+		let decoded = await jwt.verify(token, process.env.JWT_secret);
+		let username = decoded.username;
+
+		let role = role;
+		if (await checkGroup(username, role)) {
+			next();
+		} else {
+			//fail not in group
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
+		}
 	};
+};
+
+/**
+ * This is used for routes that are task related
+ * @param  {}
+ * @returns
+ */
+exports.authorisedForTasks = async (req, res, next) => {
+	let token = req.cookies.token;
+	let decoded = await jwt.verify(token, process.env.JWT_secret);
+	let username = decoded.username;
+	let state = "";
+	let role = "";
+
+	let { task_id, app_id } = req.body;
+	if (!task_id) {
+		try {
+			let [val] = pool.execute(
+				"select task_state from task where task_id = ?",
+				task_id
+			);
+			state = val[0].task_state;
+		} catch (error) {
+			return next(new ErrorObj("Cant find task", 401, ""));
+		}
+	} else {
+		state = "create";
+	}
+
+	let query = `select app_permit_${state} from Application where app_acronym = ?`;
+	try {
+		let [val] = await pool.execute(query, [app_id]);
+		const prop = "app_permit_" + state;
+		role = val[0][prop];
+	} catch (error) {
+		return next(new ErrorObj("Error Getting Permissions", 401, ""));
+	}
+
+	if (await checkGroup(username, role)) {
+		next();
+	} else {
+		//fail not in group
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
 };
