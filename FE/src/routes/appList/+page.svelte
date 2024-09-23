@@ -1,4 +1,11 @@
 <script>
+	import AppModal from '$lib/AppModal.svelte';
+
+	let showModal = false;
+
+	async function addApp(event) {
+		let newApp_name = event.detail.appname
+	}
 	let apps = [
 		{
 			id: 1,
@@ -17,7 +24,14 @@
 	];
 </script>
 
+<AppModal bind:showModal on:newApp={addApp}>
+	<h2 slot="header">Create Application</h2>
+</AppModal>
+
 <div class="container">
+	<div class="actions">
+		<button on:click={() => (showModal = true)}>Create app</button>
+	</div>
 	<div class="app-list">
 		{#each apps as app}
 			<div class="app-card">
@@ -45,6 +59,10 @@
 		gap: 20px;
 	}
 
+	.actions {
+		display: flex;
+		justify-content: flex-end;
+	}
 	.app-card {
 		padding: 20px;
 		border: 1px solid #ccc;
@@ -63,5 +81,6 @@
 		border: none;
 		border-radius: 5px;
 		cursor: pointer;
+		margin: 10px;
 	}
 </style>

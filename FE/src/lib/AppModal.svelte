@@ -13,7 +13,7 @@
 	$: if (dialog && showModal) dialog.showModal();
 
 	function btnClick() {
-		dispatch('newPlan', {
+		dispatch('newApp', {
 			planName: planName
 		});
 		planName = '';
