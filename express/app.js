@@ -11,11 +11,13 @@ const cors = require("cors");
  */
 // const clean = require('xss-clean');
 
-let ErrorObj = require("./utils/errorHandler");
+let Errorhandler = require("./utils/errorHandler");
+let ErrorObj = require("./utils/errorMessage");
 // var usersRouter = require("./routes/users");
 // var authRouter = require("./routes/auth");
 // var groupsRouter = require("./routes/group");
 var iamRouter = require("./routes/iam");
+var tmsRouter = require("./routes/tms");
 
 var app = express();
 
@@ -37,12 +39,13 @@ app.use(
 // app.use("/auth", authRouter);
 
 app.use("", iamRouter);
+app.use("/tms", tmsRouter);
 
 app.all("*", (req, res, next) => {
 	next(new ErrorObj(`${req.url} route not found`, 404, ""));
 });
 
-app.use(ErrorObj);
+app.use(Errorhandler);
 
 console.log("app has started up");
 
