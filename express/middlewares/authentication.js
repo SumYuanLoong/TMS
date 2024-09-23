@@ -94,7 +94,7 @@ exports.authorizedForRoles = (...roles) => {
 		let decoded = await jwt.verify(token, process.env.JWT_secret);
 		let username = decoded.username;
 
-		let role = role;
+		let role = roles[0]; //assumption is that there will only be a max of 1 role
 		if (await checkGroup(username, role)) {
 			next();
 		} else {
