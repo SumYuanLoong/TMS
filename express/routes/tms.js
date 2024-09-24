@@ -15,7 +15,7 @@ router.get("/plans/all", auth.verifyToken, planC.getAllPlan);
 router.post("/plans/create", auth.verifyToken, planC.createPlan);
 
 //Tasks
-router.get("/tasks/all", auth.verifyToken, taskC.getAllTask);
+router.post("/tasks/all", auth.verifyToken, taskC.getAllTask);
 router.post("/tasks/create", auth.verifyToken, taskC.createTask);
 
 module.exports = router;

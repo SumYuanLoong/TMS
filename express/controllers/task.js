@@ -13,7 +13,8 @@ var ErrorObj = require("../utils/errorMessage");
  */
 exports.getAllTask = async (req, res, next) => {
 	const { app_name } = req.body;
-	if (!app_name) {
+	console.log(app_name);
+	if (app_name) {
 		try {
 			let [vals] = await pool.query(
 				"select task_name, task_description, task_owner from task where task_app_acronym = ?",
@@ -24,7 +25,7 @@ exports.getAllTask = async (req, res, next) => {
 				taskList: vals
 			});
 		} catch (error) {
-			return next(new ErrorObj("die", 230, ""));
+			return next(new ErrorObj("die", 500, ""));
 		}
 	}
 };
