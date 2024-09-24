@@ -1,5 +1,6 @@
 <script>
 	import TaskCard from '$lib/TaskCard.svelte';
+	import { page } from '$app/stores';
 
 	let tasks = [
 		{
@@ -42,6 +43,7 @@
 			columns[task.state].push(task);
 		}
 	});
+	console.log($page.state);
 </script>
 
 <div class="board">

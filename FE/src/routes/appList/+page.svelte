@@ -12,6 +12,10 @@
 		console.log(apps);
 	}
 
+	function navigate() {
+		goto('/kanban', { state: { app: 'something' } });
+	}
+
 	async function addApp(event) {
 		let app_name = event.detail.app_name;
 		let rNumber = event.detail.rNumber;
@@ -57,7 +61,7 @@
 				<h2>{app.app_acronym}</h2>
 				<p>{app.app_description}</p>
 				<p>{app.app_Rnumber}</p>
-				<button on:click={() => console.log(`Viewing app ${app.app_acronym}`)}>View</button>
+				<button on:click={navigate}>View</button>
 				{#if PL}<button on:click={() => (showModal = true)} class="editBtn">Edit</button>{/if}
 			</div>
 		{/each}
