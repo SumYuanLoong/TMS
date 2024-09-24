@@ -32,14 +32,16 @@ exports.getApp = async (req, res, next) => {
 	let { app_acronym } = req.body;
 
 	//app_acronym validation
-
 	try {
 		let [val] = await pool.execute(
 			"select app_acronym, app_description, app_Rnumber from application where app_acronym = ?",
 			[app_acronym]
 		);
-		if (val.length == 0) {
-			console.log("no such app found");
+		if (val.length === 0) {
+			res.status(404).json({
+				success: false,
+				message: "No such app found"
+			});
 		}
 		res.status(200).json({
 			success: true,
@@ -59,7 +61,7 @@ exports.getApp = async (req, res, next) => {
  * @param {*} next
  */
 exports.updateApp = async (req, res, next) => {
-	let { app_acronym, R_number, description, startDate, endDate } = req.body;
+	let { app_acronym, description, startDate, endDate } = req.body;
 	let { permit_create, permit_open, permit_todo, permit_doing, permit_done } =
 		req.body;
 
@@ -68,9 +70,18 @@ exports.updateApp = async (req, res, next) => {
 		return next("Required fields are missing");
 	}
 
-	// Validate R_number
-	if (!Number.isInteger(R_number)) {
-		return next("R_number provided is not a whole number");
+	if (
+		isValidDate(startDate) &&
+		isValidDate(endDate) &&
+		!isDateAfter(startDate, endDate)
+	) {
+		//pass
+	} else {
+		//fail
+		res.status(400).json({
+			success: false,
+			message: "Date values provide are invalid"
+		});
 	}
 
 	// Check if app_acronym already exists (excluding the current app)
@@ -88,6 +99,8 @@ exports.updateApp = async (req, res, next) => {
 		return next(new ErrorObj("Database error", 500, ""));
 	}
 
+	//TODO: check all groups provided are valid
+
 	// Update the application record
 	try {
 		let [val] = await pool.execute(
@@ -101,7 +114,6 @@ exports.updateApp = async (req, res, next) => {
 		return next("Error with update");
 	}
 };
-// What to do for change state
 
 /**
  * Create app
@@ -127,6 +139,8 @@ exports.createApp = async (req, res, next) => {
 			message: "Required fields are missing"
 		});
 	}
+
+	//TODO: app_acronym validation, alphanumeric and underscore
 
 	try {
 		let [val] = await pool.execute(
