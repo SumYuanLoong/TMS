@@ -12,19 +12,40 @@ var ErrorObj = require("../utils/errorMessage");
  * @param {*} next
  */
 exports.getAllPlan = async (req, res, next) => {
-	let [app] = req.body;
+	let [plan_app_acronym] = req.body;
+
+	try {
+		let [val] = await pool.execute(
+			"select app_acronym from application where app_acronym = ?",
+			[plan_app_acronym]
+		);
+		if (val.length == 0) {
+			res.status(400).json({
+				success: false,
+				message: "No such Application found"
+			});
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error doing application validation"
+		});
+	}
 
 	try {
 		let [val] = await pool.query(
 			"select Plan_MVP_name, colour from plan where plan_app_acronym = ?",
-			[app]
+			[plan_app_acronym]
 		);
 		res.status(200).json({
 			success: true,
 			planList: val
 		});
 	} catch (error) {
-		console.log("error getting the apps");
+		res.status(500).json({
+			success: false,
+			message: "Error getting plans"
+		});
 	}
 };
 
@@ -77,15 +98,29 @@ exports.createPlan = async (req, res, next) => {
 		!plan_startDate ||
 		!plan_endDate
 	) {
-		return next("Required fields are missing");
+		res.status(400).json({
+			success: false,
+			message: "Required fields are missing"
+		});
 	}
 	//I wanna sleep so bad
 	/**
 	 * Plan name needs to be unique within an app
-	 * date validation
-	 * app_name validation
 	 * colour?
 	 */
+	if (
+		isValidDate(plan_startDate) &&
+		isValidDate(plan_endDate) &&
+		!isDateAfter(plan_startDate, plan_endDate)
+	) {
+		//pass
+	} else {
+		//fail
+		res.status(400).json({
+			success: false,
+			message: "Date values provide are invalid"
+		});
+	}
 
 	try {
 		let [val] = await pool.execute(
@@ -93,9 +128,16 @@ exports.createPlan = async (req, res, next) => {
 			[plan_app_acronym]
 		);
 		if (val.length == 0) {
+			res.status(400).json({
+				success: false,
+				message: "No such Application found"
+			});
 		}
 	} catch (error) {
-		console.log("yeah I have no idea what the fk is wrong anymore");
+		res.status(500).json({
+			success: false,
+			message: "Error doing application validation"
+		});
 	}
 
 	if (colour) {
@@ -111,6 +153,9 @@ exports.createPlan = async (req, res, next) => {
 			success: true
 		});
 	} catch (error) {
-		return next("error with insertion");
+		res.status(500).json({
+			success: false,
+			message: "Error inserting plan"
+		});
 	}
 };
