@@ -122,7 +122,10 @@ exports.createApp = async (req, res, next) => {
 	 */
 
 	if (!app_acronym || !R_number || !description || !startDate || !endDate) {
-		console.log("Required fields are missings");
+		res.status(400).json({
+			success: false,
+			message: "Required fields are missing"
+		});
 	}
 
 	try {
@@ -143,10 +146,29 @@ exports.createApp = async (req, res, next) => {
 		return next(new ErrorObj("Database error", 500, ""));
 	}
 
-	R_number = Number.parseInt(R_number);
 	if (!Number.isInteger(R_number)) {
-		console.log("R_number provided is not a whole number");
+		console.log();
+		res.status(400).json({
+			success: false,
+			message: "R_number provided is not a valid whole number"
+		});
 	}
+
+	if (
+		isValidDate(startDate) &&
+		isValidDate(endDate) &&
+		!isDateAfter(startDate, endDate)
+	) {
+		//pass
+	} else {
+		//fail
+		res.status(400).json({
+			success: false,
+			message: "Date values provide are invalid"
+		});
+	}
+
+	//TODO: check all groups provided are valid
 
 	try {
 		let [val] = await pool.execute(
@@ -160,3 +182,33 @@ exports.createApp = async (req, res, next) => {
 		console.log("error with insertion");
 	}
 };
+
+// checks for valid date string
+function isValidDate(dateString) {
+	const parts = dateString.split("-");
+	const day = parseInt(parts[0], 10);
+	const month = parseInt(parts[1], 10) - 1; // Months are 0-based in JavaScript
+	const year = parseInt(parts[2], 10);
+	const date = new Date(year, month, day);
+	return (
+		date.getDate() === day &&
+		date.getMonth() === month &&
+		date.getFullYear() === year
+	);
+}
+
+// check date before or after, returns true if its a situation we do not want
+function isDateAfter(date1, date2) {
+	const [day1, month1, year1] = date1.split("-");
+	const [day2, month2, year2] = date2.split("-");
+
+	if (year1 > year2) {
+		return true;
+	} else if (year1 === year2 && month1 > month2) {
+		return true;
+	} else if (year1 === year2 && month1 === month2 && day1 > day2) {
+		return true;
+	} else {
+		return false;
+	}
+}
