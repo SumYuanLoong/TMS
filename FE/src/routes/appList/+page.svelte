@@ -1,8 +1,16 @@
 <script>
+	import { goto } from '$app/navigation';
 	import AppModal from '$lib/AppModal.svelte';
 	import { axios } from '$lib/config';
 
+	let PL = false;
+	export let data;
 	let showModal = false;
+	$: apps = data.apps;
+
+	function print() {
+		console.log(apps);
+	}
 
 	async function addApp(event) {
 		let app_name = event.detail.app_name;
@@ -30,23 +38,6 @@
 			}
 		} catch (error) {}
 	}
-
-	
-
-	let apps = [
-		{
-			name: '<App_Acronym>',
-			description:
-				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Some random description......',
-			number: '<number>'
-		},
-		{
-			name: 'App name 2',
-			description:
-				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Some random description......',
-			number: '123'
-		}
-	];
 </script>
 
 <AppModal bind:showModal on:newApp={addApp}>
@@ -54,16 +45,20 @@
 </AppModal>
 
 <div class="container">
-	<div class="actions">
-		<button on:click={() => (showModal = true)}>Create app</button>
-	</div>
+	{#if PL}
+		<div class="actions">
+			<button on:click={print} style="margin:10px">Create app</button>
+		</div>
+	{/if}
+
 	<div class="app-list">
 		{#each apps as app, index}
 			<div class="app-card">
-				<h2>{app.name}</h2>
-				<p>{app.description}</p>
-				<p>{app.number}</p>
-				<button on:click={() => console.log(`Viewing app ${index}`)}>View</button>
+				<h2>{app.app_acronym}</h2>
+				<p>{app.app_description}</p>
+				<p>{app.app_Rnumber}</p>
+				<button on:click={() => console.log(`Viewing app ${app.app_acronym}`)}>View</button>
+				{#if PL}<button on:click={() => (showModal = true)} class="editBtn">Edit</button>{/if}
 			</div>
 		{/each}
 	</div>
@@ -106,6 +101,12 @@
 		border: none;
 		border-radius: 5px;
 		cursor: pointer;
-		margin: 10px;
+	}
+	.editBtn {
+		background-color: white;
+		color: black;
+		border-color: #0056b3;
+		border-style: solid;
+		border-width: 1px;
 	}
 </style>
