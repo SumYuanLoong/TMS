@@ -1,5 +1,5 @@
 <script>
-	export let showModal; // boolean
+	export let showPlanModal; // boolean
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -7,25 +7,34 @@
 	let planName = '';
 	let startDate = '';
 	let endDate = '';
-	let color = '';
+	let color = 'red';
 
-	$: if (dialog && showModal) dialog.showModal();
+	$: if (dialog && showPlanModal) dialog.showModal();
 
+	function convertDateFormat(dateString) {
+		const [year, month, day] = dateString.split('-');
+		return `${day}-${month}-${year}`;
+	}
 	function btnClick() {
+		//do data validation here
+
 		dispatch('newPlan', {
-			planName: planName
+			planName: planName,
+			startDate: convertDateFormat(startDate),
+			endDate: convertDateFormat(endDate),
+			color
 		});
 		planName = '';
 		startDate = '';
 		endDate = '';
-		color = '';
+		color = 'red';
 	}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
-	on:close={() => (showModal = false)}
+	on:close={() => (showPlanModal = false)}
 	on:click|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -34,15 +43,15 @@
 		<form on:submit|preventDefault={btnClick}>
 			<div>
 				<label for="new group name">Name:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={planName} />
+				<input type="text" placeholder="Plan Name" style="width: 100%;" bind:value={planName} />
 			</div>
 			<div>
 				<label for="new group name">Start Date:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={startDate} />
+				<input type="date" bind:value={startDate} />
 			</div>
 			<div>
 				<label for="new group name">End Date:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={endDate} />
+				<input type="date" bind:value={endDate} />
 			</div>
 			<div>
 				<label for="colourPicker">Colour</label> <br />

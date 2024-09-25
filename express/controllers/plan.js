@@ -12,7 +12,7 @@ var ErrorObj = require("../utils/errorMessage");
  * @param {*} next
  */
 exports.getAllPlan = async (req, res, next) => {
-	let [plan_app_acronym] = req.body;
+	let { plan_app_acronym } = req.body;
 
 	try {
 		let [val] = await pool.execute(
@@ -20,13 +20,13 @@ exports.getAllPlan = async (req, res, next) => {
 			[plan_app_acronym]
 		);
 		if (!val[0].app_exists) {
-			res.status(400).json({
+			return res.status(400).json({
 				success: false,
 				message: "No such Application found"
 			});
 		}
 	} catch (error) {
-		res.status(500).json({
+		return res.status(500).json({
 			success: false,
 			message: "Error doing application validation"
 		});
@@ -34,7 +34,7 @@ exports.getAllPlan = async (req, res, next) => {
 
 	try {
 		let [val] = await pool.query(
-			"select Plan_MVP_name, colour from plan where plan_app_acronym = ?",
+			"select Plan_MVP_name, plan_colour from plan where plan_app_acronym = ?",
 			[plan_app_acronym]
 		);
 		res.status(200).json({
@@ -53,6 +53,7 @@ exports.getAllPlan = async (req, res, next) => {
  * Get 1 plan
  */
 exports.getPlan = async (req, res, next) => {
+	let { plan_app_acronym, plan_name } = req.body;
 	try {
 		let [val] = await pool.query(
 			"select Plan_MVP_name, plan_colour, plan_app_acronym, plan_startDate, plan_endDate from plan where Plan_MVP_name = ? and Plan_app_acronym = ?",
@@ -141,8 +142,6 @@ exports.updatePlan = async (req, res, next) => {
 	}
 };
 
-// What to do for change state
-
 /**
  * Create plan
  * @param {*} req
@@ -153,6 +152,7 @@ exports.createPlan = async (req, res, next) => {
 	let { plan_name, plan_startDate, plan_endDate, plan_app_acronym, colour } =
 		req.body;
 
+	console.log(req.body);
 	if (!plan_name || !plan_app_acronym || !plan_startDate || !plan_endDate) {
 		res.status(400).json({
 			success: false,
@@ -170,7 +170,9 @@ exports.createPlan = async (req, res, next) => {
 	) {
 	} else {
 		//fail
-		res.status(400).json({
+		console.log(plan_startDate);
+		console.log(plan_endDate);
+		return res.status(400).json({
 			success: false,
 			message: "Date values provided are invalid"
 		});
@@ -183,7 +185,7 @@ exports.createPlan = async (req, res, next) => {
 			[plan_app_acronym]
 		);
 		if (!val[0].app_exists) {
-			res.status(400).json({
+			return res.status(400).json({
 				success: false,
 				message: "No such Application found"
 			});
@@ -203,7 +205,7 @@ exports.createPlan = async (req, res, next) => {
 			}
 		}
 	} catch (error) {
-		res.status(500).json({
+		return res.status(500).json({
 			success: false,
 			message: "Error doing application validation"
 		});
@@ -219,7 +221,7 @@ exports.createPlan = async (req, res, next) => {
 			"insert into `plan` (`plan_app_acronym`, `plan_MVP_name`, `plan_startDate`, `plan_endDate`, `plan_colour` ) values (?,?,?,?,?)",
 			[plan_app_acronym, plan_name, plan_startDate, plan_endDate, colour]
 		);
-		res.status.json({
+		res.status(200).json({
 			success: true
 		});
 	} catch (error) {
@@ -229,3 +231,33 @@ exports.createPlan = async (req, res, next) => {
 		});
 	}
 };
+
+// checks for valid date string
+function isValidDate(dateString) {
+	const parts = dateString.split("-");
+	const day = parseInt(parts[0], 10);
+	const month = parseInt(parts[1], 10) - 1; // Months are 0-based in JavaScript
+	const year = parseInt(parts[2], 10);
+	const date = new Date(year, month, day);
+	return (
+		date.getDate() === day &&
+		date.getMonth() === month &&
+		date.getFullYear() === year
+	);
+}
+
+// check date before or after, returns true if its a situation we do not want
+function isDateAfter(date1, date2) {
+	const [day1, month1, year1] = date1.split("-");
+	const [day2, month2, year2] = date2.split("-");
+
+	if (year1 > year2) {
+		return true;
+	} else if (year1 === year2 && month1 > month2) {
+		return true;
+	} else if (year1 === year2 && month1 === month2 && day1 > day2) {
+		return true;
+	} else {
+		return false;
+	}
+}

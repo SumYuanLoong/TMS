@@ -31,6 +31,7 @@ let tasks = [
 	}
 	// Add more tasks
 ];
+let plans = [];
 
 export const load = async ({ depends }) => {
 	depends('app:kanban');
@@ -53,10 +54,17 @@ export const load = async ({ depends }) => {
 			console.log(res1.data.taskList);
 			tasks = res1.data.taskList;
 		}
+		let res2 = await axios.post('/tms/plans/all', {
+			plan_app_acronym: selected_app
+		});
+		if (res2.data.success) {
+			console.log(res2.data.planList);
+			plans = res2.data.planList;
+		}
 	} catch (error) {
 		console.log(error);
 	}
 
-	return { tasks };
+	return { tasks, plans };
 };
 export const ssr = false;
