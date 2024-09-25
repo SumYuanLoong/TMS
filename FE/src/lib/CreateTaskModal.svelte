@@ -5,21 +5,24 @@
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
+	let taskName = '';
+	let taskDesc = '';
 	let planName = '';
-	let startDate = '';
-	let endDate = '';
-	let color = '';
+	let taskNotes = '';
 
 	$: if (dialog && showCreateModal) dialog.showModal();
 
 	function btnClick() {
-		dispatch('newPlan', {
-			planName: planName
+		dispatch('newTask', {
+			planName: planName,
+			taskName: taskName,
+			taskNotes: taskNotes,
+			taskDesc: taskDesc
 		});
 		planName = '';
-		startDate = '';
-		endDate = '';
-		color = '';
+		taskDesc = '';
+		taskNotes = '';
+		taskName = '';
 	}
 </script>
 
@@ -35,19 +38,19 @@
 		<form on:submit|preventDefault={btnClick}>
 			<div>
 				<label for="new group name">Name:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={planName} />
+				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={taskName} />
 			</div>
 			<div>
 				<label for="new group name">Description</label> <br />
-				<textarea maxlength="255" />
+				<textarea bind:value={taskDesc} maxlength="255" />
 			</div>
 			<div>
 				<label for="new group name">Plan</label> <br />
-				<MultiSelect options={['something']}></MultiSelect>
+				<MultiSelect options={['Phase 1']} bind:selected={planName} maxSelect={1}></MultiSelect>
 			</div>
 			<div>
 				<label for="colourPicker">Notes</label> <br />
-				<textarea />
+				<textarea bind:value={taskNotes} />
 			</div>
 
 			<button class="submitBtn" type="submit">Create Task</button>

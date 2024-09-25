@@ -68,6 +68,30 @@
 			console.log(error.response.data);
 		}
 	}
+
+	async function newTask(event) {
+		console.log(event.detail);
+		try {
+			let res = await axios.post('/tms/tasks/create', {
+				plan_name: event.detail.planName,
+				plan_app_acronym: $app_name,
+				plan_startDate: event.detail.startDate,
+				plan_endDate: event.detail.endDate,
+				colour: event.detail.color
+			});
+			if (res.data.success) {
+				plans = [
+					...plans,
+					{
+						plan_MVP_name: event.detail.planName,
+						plan_colour: event.detail.color
+					}
+				];
+			}
+		} catch (error) {
+			console.log(error.response.data);
+		}
+	}
 </script>
 
 <TaskModal bind:showTaskModal on:newApp={addThang}>
@@ -76,7 +100,7 @@
 <PlanModal bind:showPlanModal on:newPlan={newPlan}>
 	<h2 slot="header">Create Application</h2>
 </PlanModal>
-<CreateTaskModal bind:showCreateModal on:newApp={addThang}>
+<CreateTaskModal bind:showCreateModal on:newApp={newTask}>
 	<h2 slot="header">Create New Task</h2>
 </CreateTaskModal>
 
