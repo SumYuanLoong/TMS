@@ -3,6 +3,8 @@
 	import { axios } from '$lib/config';
 	import { toast } from '@zerodevx/svelte-toast';
 
+	import { title } from '$lib/stores';
+
 	let username = 'placeholder username';
 	let email = 'placeholder email';
 	let newPassword = '';
@@ -25,6 +27,7 @@
 
 	onMount(() => {
 		fetchUserData();
+		title.set('Profile');
 	});
 
 	async function handleEmail() {

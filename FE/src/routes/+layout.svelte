@@ -4,11 +4,12 @@
 	import { axios } from '$lib/config';
 	import { goto } from '$app/navigation';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
+	import { title } from '$lib/stores';
 
 	let username = '';
 	let pass = false;
 	let isAdmin = false;
-	let pagename = 'App List';
+	$: pagename = $title;
 
 	async function loadNavbar() {
 		try {
@@ -20,8 +21,8 @@
 			// place name
 			if (res.data.success) {
 				username = res.data.username;
-				pass = true;
 				isAdmin = res.data.is_admin;
+				pass = true;
 			}
 		} catch (err) {
 			//token not there

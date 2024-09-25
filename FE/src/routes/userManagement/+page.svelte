@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { toast } from '@zerodevx/svelte-toast';
 	import Modal from '$lib/Modal.svelte';
+	import { title } from '$lib/stores';
 
 	let users = [];
 	let groups = [];
@@ -36,6 +37,7 @@
 	}
 
 	onMount(async () => {
+		title.set('User Management');
 		await loadValues();
 		loaded = true;
 	});
@@ -290,7 +292,6 @@
 
 <div style="margin: 10px;">
 	<!-- Create New Group Button -->
-	<h2>User Management</h2>
 
 	<button
 		class="outerBtn"

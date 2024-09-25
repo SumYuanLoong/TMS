@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import AppModal from '$lib/AppModal.svelte';
 	import { axios } from '$lib/config';
+	import { app_name } from '$lib/stores.js';
 
 	let PL = false;
 	export let data;
@@ -12,8 +13,11 @@
 		console.log(apps);
 	}
 
-	function navigate() {
-		goto('/kanban', { state: { app: 'something' } });
+	function navigate(selected_app) {
+		// add app selected into the stores
+		// navigate to the kanban page
+		app_name.set(selected_app);
+		goto('/kanban');
 	}
 
 	async function addApp(event) {
@@ -61,7 +65,7 @@
 				<h2>{app.app_acronym}</h2>
 				<p>{app.app_description}</p>
 				<p>{app.app_Rnumber}</p>
-				<button on:click={navigate}>View</button>
+				<button on:click={() => navigate(app.app_acronym)}>View</button>
 				{#if PL}<button on:click={() => (showModal = true)} class="editBtn">Edit</button>{/if}
 			</div>
 		{/each}
