@@ -27,7 +27,7 @@
 		} catch (err) {
 			//token not there
 			console.log(err);
-			goto('login');
+			goto('/login');
 		}
 	}
 
