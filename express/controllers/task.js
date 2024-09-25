@@ -56,21 +56,65 @@ exports.updateTask = async (req, res, next) => {};
  */
 exports.createTask = async (req, res, next) => {
 	//something or the others
-	let { task_id, task_name, task_description } = req.body;
+	let { task_name, task_description, app_acronym, plan_name, task_notes } =
+		req.body;
 
 	const createDate = Date.now();
 	let token = req.cookies.token;
 	let decoded = await jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
-
-	pool.query("start transaction");
-
-	//get app_Rnumber
-	//increment it
-	//
+	// TODO: create date
+	if (!task_name || !app_acronym) {
+		res.status(401).json({
+			success: false,
+			message: "Required fields are missing"
+		});
+	}
 	try {
 		let [val] = await pool.execute(
-			"insert into `task` (`task_id`, `task_name`, `task_description`, `task_state`, `task_creator`, `task_owner`, `task_createDate` ) values (?,?,?,?,?)",
+			`select exists(select 1 from application where app_acronym = ?) as app_exists`,
+			[app_acronym]
+		);
+		if (!val[0].app_exists) {
+			return next(
+				new ErrorObj("app_acronym does not exist system", 400, "")
+			);
+		}
+	} catch (err) {
+		return next(new ErrorObj("Database error", 500, ""));
+	}
+
+	//auto generate date
+	const today = new Date();
+	const dd = String(today.getDate()).padStart(2, "0");
+	const mm = String(today.getMonth() + 1).padStart(2, "0");
+	const yyyy = today.getFullYear();
+	const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+	//TODO: Plan validation, plan must exist in the app provided, but plan can be null
+	if (plan_name) {
+		//do validation
+	}
+
+	pool.query("BEGIN transaction");
+
+	try {
+		//get app_Rnumber
+		let [val1] = await pool.execute(
+			"select app_rnumber from application where app_acronym = ?",
+			[app_acronym]
+		);
+
+		//increment it
+		let Rnum = val1[0].app_rnumber + 1;
+
+		const task_id = app_acronym + Rnum;
+
+		let [val2] = await pool.execute(
+			"insert into `task` " +
+				"(`task_id`, `task_name`, `task_description`, `task_state`, `task_creator`, `task_owner`, `task_createDate` " +
+				"`task_notes`, `task_plan`, `task_app_acronym`, ) " +
+				"values (?,?,?,?,?)",
 			[
 				task_id,
 				task_name,
@@ -78,19 +122,23 @@ exports.createTask = async (req, res, next) => {
 				"Open",
 				username,
 				username,
-				createDate
+				formattedDate,
+				task_notes,
+				plan_name,
+				app_acronym
 			]
 		);
 
-		let [val2] = await pool.execute(
+		let [val3] = await pool.execute(
 			"Update app_Rnumber from app where app_acronym = ?",
-			[Rnum, app_name]
+			[Rnum, app_acronym]
 		);
-		pool.query("commit");
+		pool.query("COMMIT transaction");
 		res.status.json({
 			success: true
 		});
 	} catch (error) {
+		pool.query("ROLLBACK transaction");
 		return next("error with insertion");
 	}
 };
