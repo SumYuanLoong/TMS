@@ -1,11 +1,20 @@
 <script>
 	import TaskCard from '$lib/TaskCard.svelte';
-	import { page } from '$app/stores';
+	import TaskModal from '$lib/TaskModal.svelte';
+	import PlanModal from '$lib/PlanModal.svelte';
 	import { afterUpdate, beforeUpdate, onMount } from 'svelte';
 	import { axios } from '$lib/config.js';
 
-	$: tasks = [];
-
+	// Section for loading
+	export let data;
+	$: tasks = data.tasks;
+	let columns = {
+		open: [],
+		todo: [],
+		doing: [],
+		done: [],
+		close: []
+	};
 	$: {
 		tasks.forEach((task) => {
 			if (columns[task.state]) {
@@ -15,59 +24,25 @@
 		columns = columns; //bit of a hack to force the columns to refresh
 	}
 
-	let columns = {
-		open: [],
-		todo: [],
-		doing: [],
-		done: [],
-		close: []
-	};
+	//Modals
+	let showTaskModal = false;
+	let showPlanModal = false;
 
-	async function onLoad(app) {
-		try {
-			let res1 = await axios.post('/tms/tasks/all', {
-				app_name: app
-			});
-			console.log(res1);
-			if (res1.data.success) {
-				console.log(res1.data.taskList);
-			}
-		} catch (error) {}
-	}
-
-	onMount(async () => {
-		console.log($page.state.app);
-		await onLoad($page.state.app);
-		tasks = [
-			{
-				id: 1,
-				name: 'Task 1',
-				description: 'Description 1',
-				owner: 'Alice',
-				state: 'todo',
-				color: 'red'
-			},
-			{
-				id: 1,
-				name: 'Task 1',
-				description: 'Description 1',
-				owner: 'Alice',
-				state: 'done',
-				color: 'blue'
-			},
-			{
-				id: 1,
-				name: 'Task 1',
-				description: 'Description 1',
-				owner: 'Alice',
-				state: 'doing',
-				color: 'green'
-			}
-			// Add more tasks
-		];
-	});
+	//handle additions
+	async function addThang() {}
 </script>
 
+<TaskModal bind:showTaskModal on:newApp={addThang}>
+	<h2 slot="header">Create Application</h2>
+</TaskModal>
+<PlanModal bind:showPlanModal on:newApp={addThang}>
+	<h2 slot="header">Create Application</h2>
+</PlanModal>
+<div class="actions">
+	<button on:click={() => (showTaskModal = true)} style="margin:10px">Create Task</button>
+	<button on:click={() => (showPlanModal = true)} style="margin:10px">Create Plan</button>
+	<button on:click={print} style="margin:10px">Plan</button>
+</div>
 <div class="board">
 	{#each Object.entries(columns) as [state, tasks]}
 		<div class="column">
@@ -88,5 +63,17 @@
 		width: 18%;
 		background-color: #f0f0f0;
 		padding: 10px;
+	}
+	.actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+	button {
+		padding: 10px 20px;
+		background-color: #007bff;
+		color: white;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
 	}
 </style>
