@@ -1,5 +1,5 @@
 <script>
-	export let showModal; // boolean
+	export let showCreateModal; // boolean
 	import { createEventDispatcher } from 'svelte';
 	import MultiSelect from 'svelte-multiselect';
 	const dispatch = createEventDispatcher();
@@ -10,7 +10,7 @@
 	let endDate = '';
 	let color = '';
 
-	$: if (dialog && showModal) dialog.showModal();
+	$: if (dialog && showCreateModal) dialog.showModal();
 
 	function btnClick() {
 		dispatch('newPlan', {
@@ -26,7 +26,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
-	on:close={() => (showModal = false)}
+	on:close={() => (showCreateModal = false)}
 	on:click|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -39,7 +39,7 @@
 			</div>
 			<div>
 				<label for="new group name">Description</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={startDate} />
+				<textarea maxlength="255" />
 			</div>
 			<div>
 				<label for="new group name">Plan</label> <br />
@@ -47,13 +47,13 @@
 			</div>
 			<div>
 				<label for="colourPicker">Notes</label> <br />
-				<picture />
+				<textarea />
 			</div>
 
 			<button class="submitBtn" type="submit">Create Task</button>
 		</form>
 		<!-- svelte-ignore a11y-autofocus -->
-		<button on:click={() => dialog.close()}>Close</button>
+		<button on:click={() => dialog.close()} class="close">Close</button>
 	</div>
 </dialog>
 
@@ -95,23 +95,50 @@
 			opacity: 1;
 		}
 	}
-	button {
-		display: block;
+	/* Form styles */
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
+
+	/* Label and input styles */
+	label {
+		display: inline-block;
+		width: 100%;
+	}
+
+	input,
+	textarea {
+		width: 100%;
+		padding: 5px;
+		border: 1px solid #ccc;
+		border-radius: 3px;
+	}
+
+	/* Button styles */
 	button {
-		background-color: white;
-		color: black;
-		border-color: #0056b3;
-		border-style: solid;
-		border-width: 1px;
-		padding: 10px;
+		padding: 10px 20px;
+		background-color: #007bff;
+		color: #fff;
+		border: none;
+		border-radius: 3px;
 		cursor: pointer;
-		margin: 5px;
-		border-radius: 5px;
 	}
+
+	button:hover {
+		background-color: #0069d9;
+	}
+
+	/* Close button styles */
+	button.close {
+		background-color: #cccccc;
+		color: #000;
+	}
+
+	/* Other styles (adjust as needed) */
 	.submitBtn {
 		background-color: #007bff;
-		color: white;
-		border: none;
+		color: #fff;
 	}
 </style>

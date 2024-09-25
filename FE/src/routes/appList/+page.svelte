@@ -4,7 +4,7 @@
 	import { axios } from '$lib/config';
 	import { app_name } from '$lib/stores.js';
 
-	let PL = false;
+	let PL = true;
 	export let data;
 	let showModal = false;
 	$: apps = data.apps;
@@ -55,7 +55,7 @@
 <div class="container">
 	{#if PL}
 		<div class="actions">
-			<button on:click={print} style="margin:10px">Create app</button>
+			<button on:click={() => (showModal = true)} style="margin:10px">Create app</button>
 		</div>
 	{/if}
 
