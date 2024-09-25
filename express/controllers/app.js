@@ -87,10 +87,10 @@ exports.updateApp = async (req, res, next) => {
 	// Check if app_acronym already exists (excluding the current app)
 	try {
 		let [val] = await pool.execute(
-			`SELECT app_Rnumber FROM application WHERE app_acronym = ?`,
+			`select exists(select 1 from application where app_acronym = ?) as app_exists`,
 			[app_acronym]
 		);
-		if (val.length == 0) {
+		if (!val[0].app_exists) {
 			return next(
 				new ErrorObj("app_acronym does not exist system", 400, "")
 			);
@@ -144,10 +144,10 @@ exports.createApp = async (req, res, next) => {
 
 	try {
 		let [val] = await pool.execute(
-			`Select app_Rnumber from application where app_acronym = ?`,
+			`select exists(select 1 from application where app_acronym = ?) as app_exists`,
 			[app_acronym]
 		);
-		if (val.length > 0) {
+		if (val[0].app_exists) {
 			return next(
 				new ErrorObj(
 					"app_acronym already exists in the system",

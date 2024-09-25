@@ -16,10 +16,10 @@ exports.getAllPlan = async (req, res, next) => {
 
 	try {
 		let [val] = await pool.execute(
-			"select app_acronym from application where app_acronym = ?",
+			"select exists (select 1 from application where app_acronym = ?) as app_exists",
 			[plan_app_acronym]
 		);
-		if (val.length == 0) {
+		if (!val[0].app_exists) {
 			res.status(400).json({
 				success: false,
 				message: "No such Application found"
@@ -77,7 +77,69 @@ exports.getPlan = async (req, res, next) => {
  * @param {*} res
  * @param {*} next
  */
-exports.updatePlan = async (req, res, next) => {};
+exports.updatePlan = async (req, res, next) => {
+	let { plan_name, plan_startDate, plan_endDate, colour } = req.body;
+
+	if (
+		!plan_name ||
+		!plan_app_acronym ||
+		!plan_startDate ||
+		!plan_endDate ||
+		!colour
+	) {
+		res.status(400).json({
+			success: false,
+			message: "Required fields are missing"
+		});
+	}
+
+	//date validation
+	if (
+		isValidDate(plan_startDate) &&
+		isValidDate(plan_endDate) &&
+		!isDateAfter(plan_startDate, plan_endDate)
+	) {
+	} else {
+		//fail
+		res.status(400).json({
+			success: false,
+			message: "Date values provided are invalid"
+		});
+	}
+
+	//Check if plan exists
+	try {
+		let [val] = await pool.execute(
+			"select exists(select 1 from plan where plan_MVP_name = ?) as plan_exists",
+			[plan_name]
+		);
+		if (val[0].plan_exists) {
+			//app exists
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error doing plan validation"
+		});
+	}
+
+	//(`plan_app_acronym`, `plan_MVP_name`, `plan_startDate`, `plan_endDate`, `plan_colour` )
+
+	try {
+		let [val] = await pool.execute(
+			"update users set plan_startDate = ?, plan_endDate = ?, plan_colour = ? where plan_MVP_name = ? ",
+			[plan_name]
+		);
+		if (val[0].plan_exists) {
+			//app exists
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error doing plan validation"
+		});
+	}
+};
 
 // What to do for change state
 
@@ -91,47 +153,54 @@ exports.createPlan = async (req, res, next) => {
 	let { plan_name, plan_startDate, plan_endDate, plan_app_acronym, colour } =
 		req.body;
 
-	if (
-		!plan_name ||
-		!plan_app_acronym ||
-		!colour ||
-		!plan_startDate ||
-		!plan_endDate
-	) {
+	if (!plan_name || !plan_app_acronym || !plan_startDate || !plan_endDate) {
 		res.status(400).json({
 			success: false,
 			message: "Required fields are missing"
 		});
 	}
-	//I wanna sleep so bad
 	/**
-	 * Plan name needs to be unique within an app
 	 * colour?
 	 */
+	//date validation
 	if (
 		isValidDate(plan_startDate) &&
 		isValidDate(plan_endDate) &&
 		!isDateAfter(plan_startDate, plan_endDate)
 	) {
-		//pass
 	} else {
 		//fail
 		res.status(400).json({
 			success: false,
-			message: "Date values provide are invalid"
+			message: "Date values provided are invalid"
 		});
 	}
 
+	//check if app exists
 	try {
 		let [val] = await pool.execute(
-			"select app_acronym from application where app_acronym = ?",
+			"select exists(select 1 from application where app_acronym = ?) as app_exists",
 			[plan_app_acronym]
 		);
-		if (val.length == 0) {
+		if (!val[0].app_exists) {
 			res.status(400).json({
 				success: false,
 				message: "No such Application found"
 			});
+		} else {
+			// find the names of plans for the app
+			// check if new name is contained in the list
+			let [val] = await pool.execute(
+				"select exists(select 1 from plan where Plan_app_Acronym = ? and plan_MVP_name = ?) as plan_exists",
+				[plan_app_acronym, plan_name]
+			);
+			if (val[0].plan_exists) {
+				return res.status(401).json({
+					success: false,
+					message:
+						"A plan with the same name already exists under this application"
+				});
+			}
 		}
 	} catch (error) {
 		res.status(500).json({
@@ -141,9 +210,10 @@ exports.createPlan = async (req, res, next) => {
 	}
 
 	if (colour) {
-		return next("R_number provided is not a whole number");
+		//check for 6 characters only hexadec
 	}
 
+	// the final insert
 	try {
 		let [val] = await pool.execute(
 			"insert into `plan` (`plan_app_acronym`, `plan_MVP_name`, `plan_startDate`, `plan_endDate`, `plan_colour` ) values (?,?,?,?,?)",
