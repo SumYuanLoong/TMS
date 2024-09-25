@@ -3,10 +3,10 @@
 </script>
 
 <div class="task-card" style="border-color: {task.color};">
-	<h3>{task.name}</h3>
-	<p>{task.description}</p>
-	<p>Owner: {task.owner}</p>
-	<button on:click={() => window.open(`#details-${task.id}`, '_blank')}>View</button>
+	<h3>{task.task_name}</h3>
+	<p>{task.task_description}</p>
+	<p>Owner: {task.task_owner}</p>
+	<button on:click={() => alert(`#details-${task.task_id}`)}>View</button>
 </div>
 
 <style>

@@ -49,9 +49,9 @@ export const load = async ({ depends }) => {
 		let res1 = await axios.post('/tms/tasks/all', {
 			app_name: selected_app
 		});
-		console.log(res1);
 		if (res1.data.success) {
 			console.log(res1.data.taskList);
+			tasks = res1.data.taskList;
 		}
 	} catch (error) {
 		console.log(error);

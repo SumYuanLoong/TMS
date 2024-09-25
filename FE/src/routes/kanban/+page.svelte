@@ -9,16 +9,18 @@
 	export let data;
 	$: tasks = data.tasks;
 	let columns = {
-		open: [],
-		todo: [],
-		doing: [],
-		done: [],
-		close: []
+		Open: [],
+		Todo: [],
+		Doing: [],
+		Done: [],
+		Close: []
 	};
 	$: {
+		console.log('re-org tasks ' + tasks.length);
 		tasks.forEach((task) => {
-			if (columns[task.state]) {
-				columns[task.state].push(task);
+			if (columns[task.task_state]) {
+				task.color = 'green';
+				columns[task.task_state].push(task);
 			}
 		});
 		columns = columns; //bit of a hack to force the columns to refresh

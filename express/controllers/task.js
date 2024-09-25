@@ -4,6 +4,7 @@
 
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
+var jwt = require("jsonwebtoken");
 
 /**
  * Gets all tasks of the Specific app
@@ -16,8 +17,8 @@ exports.getAllTask = async (req, res, next) => {
 	console.log(app_name);
 	if (app_name) {
 		try {
-			let [vals] = await pool.query(
-				"select task_name, task_description, task_owner from task where task_app_acronym = ?",
+			let [vals] = await pool.execute(
+				"select task_name, task_description, task_owner, task_state, task_id from task where task_app_acronym = ?",
 				[app_name]
 			);
 			res.status(200).json({
@@ -96,7 +97,7 @@ exports.createTask = async (req, res, next) => {
 		//do validation
 	}
 
-	pool.query("BEGIN transaction");
+	pool.query("START transaction");
 
 	try {
 		//get app_Rnumber
@@ -108,13 +109,13 @@ exports.createTask = async (req, res, next) => {
 		//increment it
 		let Rnum = val1[0].app_rnumber + 1;
 
-		const task_id = app_acronym + Rnum;
+		const task_id = app_acronym + "_" + Rnum;
 
 		let [val2] = await pool.execute(
-			"insert into `task` " +
-				"(`task_id`, `task_name`, `task_description`, `task_state`, `task_creator`, `task_owner`, `task_createDate` " +
-				"`task_notes`, `task_plan`, `task_app_acronym`, ) " +
-				"values (?,?,?,?,?)",
+			"insert into task " +
+				"(task_id, task_name, task_description, task_state, task_creator, task_owner, task_createDate, " +
+				"task_notes, task_plan, task_app_acronym) " +
+				"values (?,?,?,?,?,?,?,?,?,?)",
 			[
 				task_id,
 				task_name,
@@ -123,22 +124,26 @@ exports.createTask = async (req, res, next) => {
 				username,
 				username,
 				formattedDate,
-				task_notes,
-				plan_name,
+				task_notes || null,
+				plan_name || null,
 				app_acronym
 			]
 		);
 
 		let [val3] = await pool.execute(
-			"Update app_Rnumber from app where app_acronym = ?",
+			"Update application set app_Rnumber = ? where app_acronym = ?",
 			[Rnum, app_acronym]
 		);
-		pool.query("COMMIT transaction");
-		res.status.json({
+		pool.query("COMMIT");
+		res.status(200).json({
 			success: true
 		});
 	} catch (error) {
-		pool.query("ROLLBACK transaction");
-		return next("error with insertion");
+		console.log(error);
+		pool.query("ROLLBACK");
+		res.status(400).json({
+			success: false,
+			message: "Something wrong in transaction"
+		});
 	}
 };
