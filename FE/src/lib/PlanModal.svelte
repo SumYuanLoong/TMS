@@ -7,13 +7,16 @@
 	let planName = '';
 	let startDate = '';
 	let endDate = '';
-	let color = 'red';
+	let color = '107c0e';
 
 	$: if (dialog && showPlanModal) dialog.showModal();
 
 	function convertDateFormat(dateString) {
 		const [year, month, day] = dateString.split('-');
 		return `${day}-${month}-${year}`;
+	}
+	function print() {
+		console.log(color);
 	}
 	function btnClick() {
 		//do data validation here
@@ -27,7 +30,7 @@
 		planName = '';
 		startDate = '';
 		endDate = '';
-		color = 'red';
+		color = '107c0e';
 	}
 </script>
 
@@ -55,7 +58,7 @@
 			</div>
 			<div>
 				<label for="colourPicker">Colour</label> <br />
-				<picture />
+				<input type="color" bind:value={color} on:change={print} />
 			</div>
 
 			<button class="submitBtn" type="submit">Create Plan</button>

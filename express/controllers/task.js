@@ -17,13 +17,16 @@ exports.getAllTask = async (req, res, next) => {
 	console.log(app_name);
 	if (app_name) {
 		try {
-			let [vals] = await pool.execute(
-				"select task_name, task_description, task_owner, task_state, task_id from task where task_app_acronym = ?",
+			let [val1] = await pool.execute(
+				"select t.task_name, t.task_description, t.task_owner, t.task_state, p.plan_colour as 'color' " +
+					"from task t left join plan p on t.task_plan = p.plan_mvp_name and t.task_app_acronym = p.plan_app_acronym " +
+					"where t.task_app_acronym = ?",
 				[app_name]
 			);
+
 			res.status(200).json({
 				success: true,
-				taskList: vals
+				taskList: val1
 			});
 		} catch (error) {
 			return next(new ErrorObj("die", 500, ""));
@@ -34,7 +37,31 @@ exports.getAllTask = async (req, res, next) => {
 /**
  * Get 1 task
  */
-exports.getTask = async (req, res, next) => {};
+exports.getTask = async (req, res, next) => {
+	const { task_id } = req.body;
+
+	try {
+		let [val] = await pool.execute("select * from task where task_id = ?", [
+			task_id
+		]);
+		if (val.length == 0) {
+			return res.status(404).json({
+				success: false,
+				message: "Task with this task_id not found"
+			});
+		} else {
+			res.status(200).json({
+				success: true,
+				task: val[0]
+			});
+		}
+	} catch (error) {
+		return res.status(404).json({
+			success: false,
+			message: "Error when finding this task"
+		});
+	}
+};
 
 /**
  * Updates 1 task

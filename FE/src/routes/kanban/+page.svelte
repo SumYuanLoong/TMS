@@ -1,5 +1,4 @@
 <script>
-	import TaskCard from '$lib/TaskCard.svelte';
 	import TaskModal from '$lib/TaskModal.svelte';
 	import PlanModal from '$lib/PlanModal.svelte';
 	import CreateTaskModal from '$lib/CreateTaskModal.svelte';
@@ -15,6 +14,7 @@
 	export let data;
 	$: tasks = data.tasks;
 	$: plans = data.plans;
+	let PL = true;
 	let columns = {
 		Open: [],
 		Todo: [],
@@ -26,7 +26,6 @@
 		//console.log('re-org tasks ' + tasks.length);
 		tasks.forEach((task) => {
 			if (columns[task.task_state]) {
-				task.color = 'green';
 				columns[task.task_state].push(task);
 			}
 		});
@@ -114,7 +113,13 @@
 		<div class="column">
 			<h2>{state.toUpperCase()}</h2>
 			{#each tasks as task}
-				<TaskCard {task} />
+				<div class="task-card" style="border-color: #{task.color};">
+					<h3>{task.task_name}</h3>
+					<p>{task.task_description}</p>
+					<p>Owner: {task.task_owner}</p>
+					<button on:click={() => alert(`#details-${task.task_id}`)}>View</button>
+					{#if PL}<button></button>{/if}
+				</div>
 			{/each}
 		</div>
 	{/each}
@@ -141,5 +146,12 @@
 		border: none;
 		border-radius: 5px;
 		cursor: pointer;
+	}
+	.task-card {
+		border-left: 5px solid transparent; /* Ensures that the border always exists */
+		background-color: white;
+		margin: 10px;
+		padding: 10px;
+		box-shadow: 3px 3px 3px lightblue;
 	}
 </style>

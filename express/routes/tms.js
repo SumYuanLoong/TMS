@@ -11,11 +11,14 @@ router.get("/apps/all", auth.verifyToken, appC.getAllApp);
 router.post("/apps/create", auth.verifyToken, appC.createApp);
 
 //Plans
-router.get("/plans/all", auth.verifyToken, planC.getAllPlan);
+router.post("/plans/all", auth.verifyToken, planC.getAllPlan);
 router.post("/plans/create", auth.verifyToken, planC.createPlan);
 
 //Tasks
 router.post("/tasks/all", auth.verifyToken, taskC.getAllTask);
+router.post("/tasks/getOne", auth.verifyToken, taskC.getTask);
 router.post("/tasks/create", auth.verifyToken, taskC.createTask);
+
+router.post("/", appC.getApp);
 
 module.exports = router;

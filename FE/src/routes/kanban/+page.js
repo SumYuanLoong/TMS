@@ -61,10 +61,16 @@ export const load = async ({ depends }) => {
 			console.log(res2.data.planList);
 			plans = res2.data.planList;
 		}
+		tasks.forEach((task) => {
+			if (!task.color) {
+				task.color = '000000';
+			}
+		});
 	} catch (error) {
 		console.log(error);
 	}
 
 	return { tasks, plans };
 };
+
 export const ssr = false;
