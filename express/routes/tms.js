@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const auth = require("../middlewares/authentication");
+const auth = require("../controllers/auth");
 
 const appC = require("../controllers/app");
 const planC = require("../controllers/plan");
@@ -9,6 +9,7 @@ const taskC = require("../controllers/task");
 // Application
 router.get("/apps/all", auth.verifyToken, appC.getAllApp);
 router.post("/apps/create", auth.verifyToken, appC.createApp);
+router.post("/apps/getOne", auth.verifyToken, appC.getApp);
 
 //Plans
 router.post("/plans/all", auth.verifyToken, planC.getAllPlan);
