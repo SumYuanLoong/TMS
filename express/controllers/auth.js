@@ -166,9 +166,9 @@ exports.auth = async (req, res, next) => {
 	let decoded = jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
 
-	let [role] = req.body;
+	let { role } = req.body;
 
-	if (role && authentication.checkGroup(username, role)) {
+	if (role && checkGroup(username, role)) {
 		res.status(200).json({
 			success: true,
 			authorised: true
@@ -191,7 +191,8 @@ exports.authApp = async (req, res, next) => {
 	let token = req.cookies.token;
 	let decoded = jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
-	let owner = [];
+	let permissions = new Set();
+	const { app_acronym } = req.body;
 
 	try {
 		let [app_permits] = await pool.execute(
@@ -209,23 +210,31 @@ exports.authApp = async (req, res, next) => {
 		let [user_groups] = await pool.query(statement, [username]);
 
 		user_groups.forEach((group) => {
-			if (app_permits.app_permit_create == group) {
+			if (app_permits.app_permit_create == group.group_name) {
+				permissions.add("Create");
 			}
-			if (app_permits.app_permit_open == group) {
+			if (app_permits.app_permit_open == group.group_name) {
+				permissions.add("Open");
 			}
-			if (app_permits.app_permit_toDoList == group) {
+			if (app_permits.app_permit_toDoList == group.group_name) {
+				permissions.add("Todo");
 			}
-			if (app_permits.app_permit_Doing == group) {
+			if (app_permits.app_permit_Doing == group.group_name) {
+				permissions.add("Doing");
 			}
-			if (app_permits.app_permit_Done == group) {
+			if (app_permits.app_permit_Done == group.group_name) {
+				permissions.add("Done");
 			}
 		});
 		res.status(200).json({
-			owner,
+			permissions: Array.from(permissions),
 			success: true
 		});
 	} catch (dberr) {
-		return false;
+		res.status(500).json({
+			success: false,
+			message: dberr
+		});
 	}
 
 	//return list of state

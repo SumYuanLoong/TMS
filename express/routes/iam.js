@@ -12,6 +12,8 @@ const groupC = require("../controllers/group");
 router.post("/auth/login", authC.login);
 router.post("/auth/logout", authC.logout);
 router.get("/auth", authC.verifyToken, authC.who);
+router.post("/auth/app", authC.verifyToken, authC.authApp);
+router.post("/auth/role", authC.verifyToken, authC.auth);
 
 // routes related to groups
 router.get(
