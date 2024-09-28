@@ -23,10 +23,13 @@ export const load = async ({ parent }) => {
 			isPL = res2.data.authorised;
 		}
 		if (res2.data.authorised) {
+			groups = [];
 			console.log('trying to get group');
 			let res3 = await axios.get('/groups/getAll');
 			if (res3.data.success) {
-				groups = res3.data.grouplist;
+				res3.data.grouplist.forEach((element) => {
+					groups.push(element.group_name);
+				});
 			}
 		}
 		return { apps, isPL, groups };

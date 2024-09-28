@@ -5,7 +5,8 @@
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
-
+	export let editMode = false;
+	export let groups = [];
 	let app_name = '';
 	let rNumber = 0;
 	let description = '';
@@ -28,6 +29,14 @@
 		rNumber = 0;
 		description = '';
 	}
+
+	function editClick() {
+		app_name = '';
+		startDate = '';
+		endDate = '';
+		rNumber = 0;
+		description = '';
+	}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
@@ -39,40 +48,64 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
 		<slot name="header" />
-		<form on:submit|preventDefault={btnClick}>
+		<form on:submit|preventDefault={editMode ? editClick : btnClick}>
 			<div>
 				<label for="new group name">Acronym:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={app_name} />
+				<input
+					type="text"
+					placeholder="App Acronym"
+					style="width: 100%;"
+					bind:value={app_name}
+					disabled={editMode}
+				/>
 			</div>
 			<div>
 				<label for="new group name"> Description:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={description} />
+				<input type="text" placeholder="App Desc" style="width: 100%;" bind:value={description} />
 			</div>
 			<div>
 				<label for="new group name">R Number:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={rNumber} />
+				<input
+					type="number"
+					placeholder="Group name"
+					style="width: 100%;"
+					bind:value={rNumber}
+					disabled={editMode}
+				/>
 			</div>
 			<div>
 				<label for="new group name">Start Date:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={startDate} />
+				<input
+					type="date"
+					placeholder="Group name"
+					style="width: 100%;"
+					bind:value={startDate}
+					disabled={editMode}
+				/>
 				<label for="new group name">End Date:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={endDate} />
+				<input
+					type="date"
+					placeholder="Group name"
+					style="width: 100%;"
+					bind:value={endDate}
+					disabled={editMode}
+				/>
 			</div>
 			<div>
 				<label for="colourPicker">Permit Group</label> <br />
 				<div>
 					<label for="create">Create:</label>
-					<MultiSelect options={['something']} />
+					<MultiSelect options={groups} maxSelect={1} />
 
 					<label for="create">Open:</label>
-					<MultiSelect options={['something']} />
+					<MultiSelect options={groups} maxSelect={1} />
 
 					<label for="create">Todo:</label>
-					<MultiSelect options={['something']} />
+					<MultiSelect options={groups} maxSelect={1} />
 					<label for="create">Doing:</label>
-					<MultiSelect options={['something']} />
+					<MultiSelect options={groups} maxSelect={1} />
 					<label for="create">Done:</label>
-					<MultiSelect options={['something']} />
+					<MultiSelect options={groups} maxSelect={1} />
 				</div>
 			</div>
 

@@ -3,14 +3,14 @@
 	import AppModal from '$lib/AppModal.svelte';
 	import { axios } from '$lib/config';
 	import { app_name } from '$lib/stores.js';
-	import { beforeUpdate, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	export let data;
 	let showModal = false;
+	let editMode = false;
 	$: apps = data.apps;
 	$: PL = data.isPL;
-
-	let groups = [];
+	$: groups = data.groups;
 
 	function print() {
 		console.log(apps);
@@ -60,20 +60,26 @@
 			});
 			if (res.data.success) {
 				showModal = true;
+				editMode = true;
 			}
 		} catch (error) {
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
 			console.log(error.response.data);
 		}
 	}
 
-	async function editApp(event) {}
+	async function editApp(event) {
+		editMode = false;
+	}
 
-	beforeUpdate(async () => {
-		console.log(PL);
+	onMount(async () => {
+		console.log(groups);
 	});
 </script>
 
-<AppModal bind:showModal on:newApp={addApp}>
+<AppModal bind:showModal on:newApp={addApp} {groups} {editMode}>
 	<h2 slot="header">Create Application</h2>
 </AppModal>
 
