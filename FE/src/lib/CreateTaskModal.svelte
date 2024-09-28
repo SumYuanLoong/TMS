@@ -7,19 +7,19 @@
 	let dialog; // HTMLDialogElement
 	let taskName = '';
 	let taskDesc = '';
-	let planName = '';
+	let planName = [];
 	let taskNotes = '';
 
 	$: if (dialog && showCreateModal) dialog.showModal();
 
 	function btnClick() {
 		dispatch('newTask', {
-			planName: planName,
+			planName: planName[0],
 			taskName: taskName,
 			taskNotes: taskNotes,
 			taskDesc: taskDesc
 		});
-		planName = '';
+		planName = [];
 		taskDesc = '';
 		taskNotes = '';
 		taskName = '';
@@ -37,19 +37,19 @@
 		<slot name="header" />
 		<form on:submit|preventDefault={btnClick}>
 			<div>
-				<label for="new group name">Name:</label> <br />
+				<label for="Task Name">Name:</label> <br />
 				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={taskName} />
 			</div>
 			<div>
-				<label for="new group name">Description</label> <br />
+				<label for="Task Desc">Description</label> <br />
 				<textarea bind:value={taskDesc} maxlength="255" />
 			</div>
 			<div>
-				<label for="new group name">Plan</label> <br />
+				<label for="Task is of Plan">Plan</label> <br />
 				<MultiSelect options={['Phase 1']} bind:selected={planName} maxSelect={1}></MultiSelect>
 			</div>
 			<div>
-				<label for="colourPicker">Notes</label> <br />
+				<label for="Task Notes">Notes</label> <br />
 				<textarea bind:value={taskNotes} />
 			</div>
 

@@ -2,12 +2,11 @@
 	import { axios } from '$lib/config';
 	import { goto } from '$app/navigation';
 	import { toast } from '@zerodevx/svelte-toast';
+	import { onMount } from 'svelte';
 	let username = '';
 	let password = '';
 
 	const handleLogin = async () => {
-		console.log('Login attempt with:', { username, password });
-
 		if (!username || !password) {
 			toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 		} else {
@@ -27,6 +26,9 @@
 			}
 		}
 	};
+	onMount(() => {
+		console.log('did we just get kicked?');
+	});
 </script>
 
 <div class="login-container">

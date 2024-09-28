@@ -143,6 +143,9 @@
 				toast.push(newGroup + ' added to groups', { duration: 3000 });
 			}
 		} catch (error) {
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
 			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
@@ -303,6 +306,22 @@
 		<h2 slot="header">Create group</h2>
 	</Modal>
 
+	<h3 style="margin-top: 1em">Create new User</h3>
+	<form on:submit|preventDefault={createUser}>
+		<input type="text" placeholder="Username" bind:value={newUsername} bind:this={usernameInput} />
+		<input type="password" placeholder="Password" bind:value={newPassword} />
+		<input type="text" placeholder="Email" bind:value={newEmail} />
+		{#if loaded}<MultiSelect
+				options={groups}
+				bind:selected={newGroups}
+				style="width:40%; margin: 4px"
+			/>{/if}
+		<select bind:value={newActive}>
+			<option value={true}>Yes</option>
+			<option value={false}>No</option>
+		</select>
+		<button class="outerBtn" type="submit">Create User</button>
+	</form>
 	<!-- User Table -->
 	<table class="user-table">
 		<thead>
@@ -379,22 +398,6 @@
 			{/each}
 		</tbody>
 	</table>
-	<h3>Create new User</h3>
-	<form on:submit|preventDefault={createUser}>
-		<input type="text" placeholder="Username" bind:value={newUsername} bind:this={usernameInput} />
-		<input type="password" placeholder="Password" bind:value={newPassword} />
-		<input type="text" placeholder="Email" bind:value={newEmail} />
-		{#if loaded}<MultiSelect
-				options={groups}
-				bind:selected={newGroups}
-				style="width:40%; margin: 4px"
-			/>{/if}
-		<select bind:value={newActive}>
-			<option value={true}>Yes</option>
-			<option value={false}>No</option>
-		</select>
-		<button class="outerBtn" type="submit">Create User</button>
-	</form>
 </div>
 
 <style>
