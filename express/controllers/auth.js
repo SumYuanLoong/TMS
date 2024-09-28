@@ -168,7 +168,7 @@ exports.auth = async (req, res, next) => {
 
 	let { role } = req.body;
 
-	if (role && checkGroup(username, role)) {
+	if (role && (await checkGroup(username, role))) {
 		res.status(200).json({
 			success: true,
 			authorised: true

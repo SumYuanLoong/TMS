@@ -3,11 +3,14 @@
 	import AppModal from '$lib/AppModal.svelte';
 	import { axios } from '$lib/config';
 	import { app_name } from '$lib/stores.js';
+	import { beforeUpdate, onMount } from 'svelte';
 
-	let PL = true;
 	export let data;
 	let showModal = false;
 	$: apps = data.apps;
+	$: PL = data.isPL;
+
+	let groups = [];
 
 	function print() {
 		console.log(apps);
@@ -44,8 +47,30 @@
 					}
 				];
 			}
-		} catch (error) {}
+		} catch (error) {
+			console.log(error.response.data);
+		}
 	}
+
+	async function startEdit(id) {
+		// do things here to the appModal
+		try {
+			let res = await axios.post('/tms/apps/getOne', {
+				app_acronym: id
+			});
+			if (res.data.success) {
+				showModal = true;
+			}
+		} catch (error) {
+			console.log(error.response.data);
+		}
+	}
+
+	async function editApp(event) {}
+
+	beforeUpdate(async () => {
+		console.log(PL);
+	});
 </script>
 
 <AppModal bind:showModal on:newApp={addApp}>
@@ -66,7 +91,8 @@
 				<p>{app.app_description}</p>
 				<p>{app.app_Rnumber}</p>
 				<button on:click={() => navigate(app.app_acronym)}>View</button>
-				{#if PL}<button on:click={() => (showModal = true)} class="editBtn">Edit</button>{/if}
+				{#if PL}<button on:click={() => startEdit(app.app_acronym)} class="editBtn">Edit</button
+					>{/if}
 			</div>
 		{/each}
 	</div>
