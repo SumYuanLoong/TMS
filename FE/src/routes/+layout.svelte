@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { afterUpdate, onMount } from 'svelte';
+	import { beforeUpdate, onMount } from 'svelte';
 	import { axios } from '$lib/config';
 	import { goto } from '$app/navigation';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
@@ -26,12 +26,14 @@
 			}
 		} catch (err) {
 			//token not there
-			console.log(err);
-			goto('/login');
+			if (err.response.data.message == 'Invalid token') {
+				goto('/logout');
+			}
 		}
 	}
 
-	afterUpdate(() => {
+	beforeUpdate(() => {
+		//using it so auth is called on every page load
 		if ($page.url.pathname.startsWith('/login') || $page.url.pathname.startsWith('/logout')) {
 			pass = true;
 		} else {
