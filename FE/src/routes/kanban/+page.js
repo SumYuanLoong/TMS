@@ -4,34 +4,10 @@ import { axios } from '$lib/config';
 import { app_name, title } from '$lib/stores.js';
 
 let selected_app = '';
-let tasks = [
-	{
-		id: 1,
-		name: 'Task 1',
-		description: 'Description 1',
-		owner: 'Alice',
-		state: 'todo',
-		color: 'red'
-	},
-	{
-		id: 1,
-		name: 'Task 1',
-		description: 'Description 1',
-		owner: 'Alice',
-		state: 'done',
-		color: 'blue'
-	},
-	{
-		id: 1,
-		name: 'Task 1',
-		description: 'Description 1',
-		owner: 'Alice',
-		state: 'doing',
-		color: 'green'
-	}
-	// Add more tasks
-];
+let tasks = [];
 let plans = [];
+let isPM = false;
+let isPL = false;
 
 export const load = async ({ depends }) => {
 	depends('app:kanban');
@@ -66,11 +42,24 @@ export const load = async ({ depends }) => {
 				task.color = '000000';
 			}
 		});
+
+		const res3 = await axios.post('/auth/role', {
+			role: 'PL'
+		});
+		if (res3.data.success) {
+			isPL = res3.data.authorised;
+		}
+		const res4 = await axios.post('/auth/role', {
+			role: 'PM'
+		});
+		if (res4.data.success) {
+			isPM = res4.data.authorised;
+		}
 	} catch (error) {
 		console.log(error);
 	}
 
-	return { tasks, plans };
+	return { tasks, plans, isPM, isPL };
 };
 
 export const ssr = false;

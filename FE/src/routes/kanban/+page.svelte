@@ -14,7 +14,8 @@
 	export let data;
 	$: tasks = data.tasks;
 	$: plans = data.plans;
-	let PL = true;
+	$: isPL = data.isPL;
+	$: isPM = data.isPM;
 	let columns = {
 		Open: [],
 		Todo: [],
@@ -104,9 +105,11 @@
 </CreateTaskModal>
 
 <div class="actions">
-	<button on:click={() => (showCreateModal = true)} style="margin:10px">Create Task</button>
-	<button on:click={() => (showPlanModal = true)} style="margin:10px">Create Plan</button>
-	<button on:click={print} style="margin:10px">Plan</button>
+	{#if isPL}
+		<button on:click={() => (showCreateModal = true)} style="margin:10px">Create Task</button>{/if}
+	{#if isPM}
+		<button on:click={() => (showPlanModal = true)} style="margin:10px">Create Plan</button>
+		<button on:click={print} style="margin:10px">Plan</button>{/if}
 </div>
 <div class="board">
 	{#each Object.entries(columns) as [state, tasks]}
@@ -118,7 +121,6 @@
 					<p>{task.task_description}</p>
 					<p>Owner: {task.task_owner}</p>
 					<button on:click={() => alert(`#details-${task.task_id}`)}>View</button>
-					{#if PL}<button></button>{/if}
 				</div>
 			{/each}
 		</div>
