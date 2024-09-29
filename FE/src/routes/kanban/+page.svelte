@@ -5,6 +5,7 @@
 
 	import { app_name } from '$lib/stores.js';
 	import { axios } from '$lib/config.js';
+	import { invalidate } from '$app/navigation';
 
 	function print() {
 		console.log(plans);
@@ -14,8 +15,10 @@
 	export let data;
 	$: tasks = data.tasks;
 	$: plans = data.plans;
-	$: isPL = data.isPL;
+	let plan_names = [];
 	$: isPM = data.isPM;
+	$: permissions = data.permissions;
+
 	let columns = {
 		Open: [],
 		Todo: [],
@@ -35,6 +38,11 @@
 	$: {
 		console.log('plans updated');
 		console.log(plans);
+		plan_names = plans.map((plan) => plan.Plan_MVP_name);
+	}
+	$: {
+		console.log('perms updated');
+		console.log(permissions);
 	}
 
 	//Modals
@@ -74,19 +82,15 @@
 		try {
 			let res = await axios.post('/tms/tasks/create', {
 				plan_name: event.detail.planName,
-				plan_app_acronym: $app_name,
-				plan_startDate: event.detail.startDate,
-				plan_endDate: event.detail.endDate,
-				colour: event.detail.color
+				app_acronym: $app_name,
+				task_name: event.detail.taskName,
+				task_description: event.detail.taskDesc,
+				input_task_notes: event.detail.taskNotes
 			});
 			if (res.data.success) {
-				plans = [
-					...plans,
-					{
-						plan_MVP_name: event.detail.planName,
-						plan_colour: event.detail.color
-					}
-				];
+				console.log('new task');
+				tasks = [];
+				invalidate('app:kanban');
 			}
 		} catch (error) {
 			console.log(error.response.data);
@@ -100,12 +104,12 @@
 <PlanModal bind:showPlanModal on:newPlan={newPlan}>
 	<h2 slot="header">Create Application</h2>
 </PlanModal>
-<CreateTaskModal bind:showCreateModal on:newApp={newTask}>
+<CreateTaskModal bind:showCreateModal on:newTask={newTask} plans={plan_names}>
 	<h2 slot="header">Create New Task</h2>
 </CreateTaskModal>
 
 <div class="actions">
-	{#if isPL}
+	{#if permissions.includes('Create')}
 		<button on:click={() => (showCreateModal = true)} style="margin:10px">Create Task</button>{/if}
 	{#if isPM}
 		<button on:click={() => (showPlanModal = true)} style="margin:10px">Create Plan</button>

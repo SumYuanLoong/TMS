@@ -64,17 +64,6 @@ exports.getTask = async (req, res, next) => {
 };
 
 /**
- * Updates 1 task
- * Pre-req: User has group-level access to manage task
- * @param {string} task_id
- * @param {*} res
- * @param {*} next
- */
-exports.updateTask = async (req, res, next) => {};
-
-// What to do for change state
-
-/**
  * Create task
  * need check for same name within 1 app
  * TODO: transaction
@@ -84,16 +73,22 @@ exports.updateTask = async (req, res, next) => {};
  */
 exports.createTask = async (req, res, next) => {
 	//something or the others
-	let { task_name, task_description, app_acronym, plan_name, task_notes } =
-		req.body;
+	let {
+		task_name,
+		task_description,
+		app_acronym,
+		plan_name,
+		input_task_notes
+	} = req.body;
 
 	const createDate = Date.now();
 	let token = req.cookies.token;
 	let decoded = await jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
+
 	// TODO: create date
 	if (!task_name || !app_acronym) {
-		res.status(401).json({
+		return res.status(401).json({
 			success: false,
 			message: "Required fields are missing"
 		});
@@ -105,7 +100,7 @@ exports.createTask = async (req, res, next) => {
 		);
 		if (!val[0].app_exists) {
 			return next(
-				new ErrorObj("app_acronym does not exist system", 400, "")
+				new ErrorObj("app_acronym does not exist in system", 400, "")
 			);
 		}
 	} catch (err) {
@@ -122,7 +117,27 @@ exports.createTask = async (req, res, next) => {
 	//TODO: Plan validation, plan must exist in the app provided, but plan can be null
 	if (plan_name) {
 		//do validation
+		try {
+			let [val] = await pool.execute(
+				`select exists(select 1 from plan where Plan_app_Acronym = ? and Plan_MVP_name = ?) as plan_exists`,
+				[app_acronym, plan_name]
+			);
+			if (!val[0].plan_exists) {
+				return res.status(500).json({
+					success: false,
+					message: "This Plan does not exist"
+				});
+			}
+		} catch (error) {
+			return res.status(500).json({
+				success: false,
+				message: "Database Error"
+			});
+		}
 	}
+
+	let task_notes = `${username} has created task ${task_name} at ${formattedDate}. \n Task is now open. \n`;
+	task_notes = task_notes + input_task_notes;
 
 	pool.query("START transaction");
 
@@ -174,3 +189,14 @@ exports.createTask = async (req, res, next) => {
 		});
 	}
 };
+
+/**
+ * Updates 1 task
+ * Pre-req: User has group-level access to manage task
+ * @param {string} task_id
+ * @param {*} res
+ * @param {*} next
+ */
+exports.updateTask = async (req, res, next) => {};
+
+// What to do for change state

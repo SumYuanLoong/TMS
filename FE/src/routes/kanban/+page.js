@@ -7,7 +7,7 @@ let selected_app = '';
 let tasks = [];
 let plans = [];
 let isPM = false;
-let isPL = false;
+let permissions = [];
 
 export const load = async ({ depends }) => {
 	depends('app:kanban');
@@ -17,7 +17,7 @@ export const load = async ({ depends }) => {
 	app_name.subscribe((app) => {
 		selected_app = app;
 	});
-
+	title.set(`${selected_app} Kanban`);
 	if (!selected_app) {
 		console.log('nothing in store, redirecting');
 		goto('/appList');
@@ -27,39 +27,37 @@ export const load = async ({ depends }) => {
 			app_name: selected_app
 		});
 		if (res1.data.success) {
-			console.log(res1.data.taskList);
 			tasks = res1.data.taskList;
-		}
-		let res2 = await axios.post('/tms/plans/all', {
-			plan_app_acronym: selected_app
-		});
-		if (res2.data.success) {
-			console.log(res2.data.planList);
-			plans = res2.data.planList;
 		}
 		tasks.forEach((task) => {
 			if (!task.color) {
 				task.color = '000000';
 			}
 		});
-
-		const res3 = await axios.post('/auth/role', {
-			role: 'PL'
+		let res2 = await axios.post('/tms/plans/all', {
+			plan_app_acronym: selected_app
 		});
-		if (res3.data.success) {
-			isPL = res3.data.authorised;
+		if (res2.data.success) {
+			plans = res2.data.planList;
 		}
+
 		const res4 = await axios.post('/auth/role', {
 			role: 'PM'
 		});
 		if (res4.data.success) {
 			isPM = res4.data.authorised;
 		}
+		const res5 = await axios.post('/auth/app', {
+			app_acronym: selected_app
+		});
+		if (res5.data.success) {
+			permissions = res5.data.permissions;
+		}
 	} catch (error) {
 		console.log(error);
 	}
 
-	return { tasks, plans, isPM, isPL };
+	return { tasks, plans, isPM, permissions };
 };
 
 export const ssr = false;

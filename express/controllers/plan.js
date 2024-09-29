@@ -217,7 +217,7 @@ exports.createPlan = async (req, res, next) => {
 
 	// the final insert
 	try {
-		let [val] = await pool.execute(
+		await pool.execute(
 			"insert into `plan` (`plan_app_acronym`, `plan_MVP_name`, `plan_startDate`, `plan_endDate`, `plan_colour` ) values (?,?,?,?,?)",
 			[plan_app_acronym, plan_name, plan_startDate, plan_endDate, colour]
 		);

@@ -4,6 +4,7 @@
 	import MultiSelect from 'svelte-multiselect';
 	const dispatch = createEventDispatcher();
 
+	export let plans;
 	let dialog; // HTMLDialogElement
 	let taskName = '';
 	let taskDesc = '';
@@ -19,10 +20,10 @@
 			taskNotes: taskNotes,
 			taskDesc: taskDesc
 		});
-		planName = [];
-		taskDesc = '';
-		taskNotes = '';
-		taskName = '';
+		//planName = [];
+		//taskDesc = '';
+		//taskNotes = '';
+		//taskName = '';
 	}
 </script>
 
@@ -46,7 +47,7 @@
 			</div>
 			<div>
 				<label for="Task is of Plan">Plan</label> <br />
-				<MultiSelect options={['Phase 1']} bind:selected={planName} maxSelect={1}></MultiSelect>
+				<MultiSelect options={plans} bind:selected={planName} maxSelect={1}></MultiSelect>
 			</div>
 			<div>
 				<label for="Task Notes">Notes</label> <br />
