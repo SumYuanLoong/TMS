@@ -1,5 +1,5 @@
 <script>
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import AppModal from '$lib/AppModal.svelte';
 	import { axios } from '$lib/config';
 	import { app_name } from '$lib/stores.js';
@@ -7,7 +7,9 @@
 
 	export let data;
 	let showModal = false;
+	let showEModel = false;
 	let editMode = false;
+	let editData = {};
 	$: apps = data.apps;
 	$: PL = data.isPL;
 	$: groups = data.groups;
@@ -23,35 +25,6 @@
 		goto('/kanban');
 	}
 
-	async function addApp(event) {
-		let app_name = event.detail.app_name;
-		let rNumber = event.detail.rNumber;
-		//TODO: validate app_name
-		//TODO: validate rNumber
-
-		try {
-			let res = await axios.post('/tms/apps/create', {
-				app_acronym: app_name,
-				R_number: rNumber,
-				description: event.detail.description,
-				startDate: event.detail.startDate,
-				endDate: event.detail.endDate
-			});
-			if (res.data.success) {
-				apps = [
-					...apps,
-					{
-						name: app_name,
-						description: event.detail.description,
-						number: rNumber
-					}
-				];
-			}
-		} catch (error) {
-			console.log(error.response.data);
-		}
-	}
-
 	async function startEdit(id) {
 		// do things here to the appModal
 		try {
@@ -59,8 +32,13 @@
 				app_acronym: id
 			});
 			if (res.data.success) {
-				showModal = true;
+				console.log(res.data);
+
+				showEModel = true;
 				editMode = true;
+				editData = res.data.applist[0];
+				editData.App_startDate = dateFormating(res.data.applist[0].App_startDate);
+				editData.App_endDate = dateFormating(res.data.applist[0].App_endDate);
 			}
 		} catch (error) {
 			if (error.response.data.message == 'Invalid Credentials') {
@@ -70,16 +48,48 @@
 		}
 	}
 
+	function dateFormating(date) {
+		const parts = date.split('-');
+		const dd = parts[0];
+		const mm = parts[1];
+		const yyyy = parts[2];
+		const formattedDate = `${yyyy}-${mm}-${dd}`;
+		return formattedDate;
+	}
+
 	async function editApp(event) {
 		editMode = false;
 	}
 
+	async function authRedirect(params) {
+		invalidate('app:appList');
+	}
+
 	onMount(async () => {
-		console.log(groups);
+		//console.log(groups);
 	});
 </script>
 
-<AppModal bind:showModal on:newApp={addApp} {groups} {editMode}>
+<AppModal bind:showModal {groups}>
+	<h2 slot="header">Create Application</h2>
+</AppModal>
+<AppModal
+	bind:showModal={showEModel}
+	on:editApp={editApp}
+	on:auth={authRedirect}
+	{groups}
+	{editMode}
+	app_name={editData.App_Acronym}
+	rNumber={editData.App_Rnumber}
+	description={editData.App_Description}
+	startDate={editData.App_startDate}
+	endDate={editData.App_endDate}
+	create={editData.App_permit_Create}
+	open={editData.App_permit_Open}
+	todo={editData.App_permit_toDoList}
+	doing={editData.App_permit_Doing}
+	done={editData.App_permit_Done}
+>
 	<h2 slot="header">Create Application</h2>
 </AppModal>
 
@@ -95,7 +105,7 @@
 			<div class="app-card">
 				<h2>{app.app_acronym}</h2>
 				<p>{app.app_description}</p>
-				<p>{app.app_Rnumber}</p>
+				<p>R number: {app.app_Rnumber}</p>
 				<button on:click={() => navigate(app.app_acronym)}>View</button>
 				{#if PL}<button on:click={() => startEdit(app.app_acronym)} class="editBtn">Edit</button
 					>{/if}

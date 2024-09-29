@@ -5,10 +5,10 @@ let apps = [];
 let isPL = false;
 let groups = [];
 
-export const load = async ({ parent }) => {
+export const load = async ({ depends }) => {
 	title.set('App List');
 	//insert something to find if user is "PL" group and "PM" group
-	//await parent();
+	depends('app:appList');
 	console.log('applist page.js');
 	try {
 		const res1 = await axios.get('/tms/apps/all');

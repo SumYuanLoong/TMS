@@ -34,7 +34,7 @@ exports.getApp = async (req, res, next) => {
 	//app_acronym validation
 	try {
 		let [val] = await pool.execute(
-			"select app_acronym, app_description, app_Rnumber from application where app_acronym = ?",
+			"select * from application where app_acronym = ?",
 			[app_acronym]
 		);
 		if (val.length === 0) {
@@ -61,57 +61,70 @@ exports.getApp = async (req, res, next) => {
  * @param {*} next
  */
 exports.updateApp = async (req, res, next) => {
-	let { app_acronym, description, startDate, endDate } = req.body;
+	let { app_acronym, description } = req.body;
 	let { permit_create, permit_open, permit_todo, permit_doing, permit_done } =
 		req.body;
 
 	// Check for required fields
-	if (!app_acronym || !R_number || !description || !startDate || !endDate) {
+	if (!app_acronym || !description) {
 		return next("Required fields are missing");
 	}
 
-	if (
-		isValidDate(startDate) &&
-		isValidDate(endDate) &&
-		!isDateAfter(startDate, endDate)
-	) {
-		//pass
-	} else {
-		//fail
-		res.status(400).json({
+	//TODO: check all groups provided are valid
+	if (permit_create && !groupCheck(permit_create)) {
+		return res.status(400).json({
 			success: false,
-			message: "Date values provide are invalid"
+			message: "Create group does not exist"
+		});
+	}
+	if (permit_doing && !groupCheck(permit_doing)) {
+		return res.status(400).json({
+			success: false,
+			message: "Doing group does not exist"
+		});
+	}
+	if (permit_done && !groupCheck(permit_done)) {
+		return res.status(400).json({
+			success: false,
+			message: "Done group does not exist"
+		});
+	}
+	if (permit_open && !groupCheck(permit_open)) {
+		return res.status(400).json({
+			success: false,
+			message: "Open group does not exist"
+		});
+	}
+	if (permit_todo && !groupCheck(permit_todo)) {
+		return res.status(400).json({
+			success: false,
+			message: "Todo group does not exist"
 		});
 	}
 
-	// Check if app_acronym already exists (excluding the current app)
-	try {
-		let [val] = await pool.execute(
-			`select exists(select 1 from application where app_acronym = ?) as app_exists`,
-			[app_acronym]
-		);
-		if (!val[0].app_exists) {
-			return next(
-				new ErrorObj("app_acronym does not exist system", 400, "")
-			);
-		}
-	} catch (err) {
-		return next(new ErrorObj("Database error", 500, ""));
-	}
-
-	//TODO: check all groups provided are valid
-
 	// Update the application record
 	try {
-		let [val] = await pool.execute(
-			"UPDATE application SET app_description = ?, app_Rnumber = ?, app_startDate = ?, app_endDate = ? WHERE app_acronym = ?",
-			[app_acronym, description, R_number, startDate, endDate]
+		let [val] = await pool.query(
+			`update application set App_Description = ?, App_permit_Create = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done =? WHERE app_acronym = ?`,
+			[
+				description,
+				permit_create,
+				permit_open,
+				permit_todo,
+				permit_doing,
+				permit_done,
+				app_acronym
+			]
 		);
 		res.status(200).json({
 			success: true
 		});
 	} catch (error) {
-		return next("Error with update");
+		console.log(error);
+		return res.status(500).json({
+			success: false,
+			message: "Error with updating row"
+		});
 	}
 };
 
@@ -130,18 +143,49 @@ exports.createApp = async (req, res, next) => {
 	 * checks to do
 	 * mandatory app_acronym, R_number, startDate, endDate
 	 * check format and validity of the start and end date
-	 * If app_acronym already exists
+	 *
 	 */
 
-	if (!app_acronym || !R_number || !description || !startDate || !endDate) {
-		res.status(400).json({
+	if (!app_acronym || typeof R_number === Number || !startDate || !endDate) {
+		return res.status(400).json({
 			success: false,
 			message: "Required fields are missing"
 		});
 	}
 
-	//TODO: app_acronym validation, alphanumeric and underscore
+	//app_acronym validation, alphanumeric and underscore
+	const appRegex = new RegExp(/^[\w]+$/g);
+	if (!appRegex.test(app_acronym)) {
+		return res.status(400).json({
+			success: false,
+			message: "App acronym provided is invalid"
+		});
+	}
 
+	if (!Number.isInteger(R_number)) {
+		console.log();
+		return res.status(400).json({
+			success: false,
+			message: "R_number provided is not a valid whole number"
+		});
+	}
+
+	// date validation
+	if (!isValidDate(startDate) || !isValidDate(endDate)) {
+		//fail
+		return res.status(400).json({
+			success: false,
+			message: "Date values provided are invalid"
+		});
+	} else if (isDateAfter(startDate, endDate)) {
+		//fail
+		return res.status(400).json({
+			success: false,
+			message: "Start Date after end date"
+		});
+	}
+
+	// check if name already exists
 	try {
 		let [val] = await pool.execute(
 			`select exists(select 1 from application where app_acronym = ?) as app_exists`,
@@ -160,40 +204,65 @@ exports.createApp = async (req, res, next) => {
 		return next(new ErrorObj("Database error", 500, ""));
 	}
 
-	if (!Number.isInteger(R_number)) {
-		console.log();
-		res.status(400).json({
-			success: false,
-			message: "R_number provided is not a valid whole number"
-		});
-	}
-
-	if (
-		isValidDate(startDate) &&
-		isValidDate(endDate) &&
-		!isDateAfter(startDate, endDate)
-	) {
-		//pass
-	} else {
-		//fail
-		res.status(400).json({
-			success: false,
-			message: "Date values provide are invalid"
-		});
-	}
-
 	//TODO: check all groups provided are valid
+	if (permit_create && !groupCheck(permit_create)) {
+		return res.status(400).json({
+			success: false,
+			message: "Create group does not exist"
+		});
+	}
+	if (permit_doing && !groupCheck(permit_doing)) {
+		return res.status(400).json({
+			success: false,
+			message: "Doing group does not exist"
+		});
+	}
+	if (permit_done && !groupCheck(permit_done)) {
+		return res.status(400).json({
+			success: false,
+			message: "Done group does not exist"
+		});
+	}
+	if (permit_open && !groupCheck(permit_open)) {
+		return res.status(400).json({
+			success: false,
+			message: "Open group does not exist"
+		});
+	}
+	if (permit_todo && !groupCheck(permit_todo)) {
+		return res.status(400).json({
+			success: false,
+			message: "Todo group does not exist"
+		});
+	}
 
 	try {
 		let [val] = await pool.execute(
-			"insert into `application` (`app_acronym`, `app_description`, `app_Rnumber`, `app_startDate`, `app_endDate` ) values (?,?,?,?,?)",
-			[app_acronym, description, R_number, startDate, endDate]
+			"insert into `application` (`App_Acronym`, `App_Description`, `app_Rnumber`, `app_startDate`, " +
+				"`app_endDate`, `App_permit_Create`,`App_permit_Open`,`App_permit_toDoList`,`App_permit_Doing`, " +
+				"`App_permit_Done` ) values " +
+				"(?,?,?,?,?,?,?,?,?,?)",
+			[
+				app_acronym,
+				description,
+				R_number,
+				startDate,
+				endDate,
+				permit_create,
+				permit_open,
+				permit_todo,
+				permit_doing,
+				permit_done
+			]
 		);
 		res.status(200).json({
 			success: true
 		});
 	} catch (error) {
-		console.log("error with insertion");
+		return res.status(500).json({
+			success: false,
+			message: "Error with inserting row"
+		});
 	}
 };
 
@@ -221,6 +290,17 @@ function isDateAfter(date1, date2) {
 	} else if (year1 === year2 && month1 > month2) {
 		return true;
 	} else if (year1 === year2 && month1 === month2 && day1 > day2) {
+		return true;
+	} else {
+		return false;
+	}
+}
+async function groupCheck(group_name) {
+	let [val] = await pool.execute(
+		"select exists(select 1 from group_list where group_name = ?) as group_exists",
+		[group_name]
+	);
+	if (val[0].group_exists) {
 		return true;
 	} else {
 		return false;
