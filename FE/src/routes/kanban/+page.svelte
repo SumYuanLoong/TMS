@@ -5,7 +5,7 @@
 
 	import { app_name } from '$lib/stores.js';
 	import { axios } from '$lib/config.js';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 
 	function print() {
 		console.log(plans);
@@ -18,6 +18,18 @@
 	let plan_names = [];
 	$: isPM = data.isPM;
 	$: permissions = data.permissions;
+
+	let taskData = {};
+	let flagPlan = false;
+	let flagNone = true;
+	let flagNotes = false;
+	/**
+	 * Permissions
+	 * create: access create modal
+	 * open: notes and plan
+	 * dev: notes
+	 * done: notes and plan
+	 */
 
 	let columns = {
 		Open: [],
@@ -51,8 +63,6 @@
 	let showPlanModal = false;
 
 	//handle additions
-	async function addThang() {}
-
 	async function newPlan(event) {
 		console.log(event.detail);
 		try {
@@ -96,13 +106,51 @@
 			console.log(error.response.data);
 		}
 	}
+
+	async function updateTask() {}
+
+	// task Modal setup
+	async function viewTask(task_id) {
+		try {
+			let res = await axios.post('/tms/tasks/getOne', {
+				task_id: task_id
+			});
+			if (res.data.success) {
+				console.log(res.data);
+
+				showTaskModal = true;
+				taskData = res.data.task;
+			}
+		} catch (error) {
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			console.log(error.response.data);
+		}
+	}
 </script>
 
-<TaskModal bind:showTaskModal on:newApp={addThang}>
-	<h2 slot="header">Create Application</h2>
+<TaskModal
+	bind:showTaskModal
+	on:newApp={updateTask}
+	{flagNone}
+	{flagNotes}
+	{flagPlan}
+	taskState={taskData.Task_state}
+	taskID={taskData.Task_id}
+	taskName={taskData.Task_name}
+	taskNotes={taskData.Task_notes}
+	taskDescription={taskData.Task_description}
+	taskCreator={taskData.Task_creator}
+	taskOwner={taskData.Task_owner}
+	taskCreatedDate={taskData.Task_createDate}
+	planName={taskData.Task_plan}
+	plans={plan_names}
+>
+	<h2 slot="header">Task Detail</h2>
 </TaskModal>
 <PlanModal bind:showPlanModal on:newPlan={newPlan}>
-	<h2 slot="header">Create Application</h2>
+	<h2 slot="header">Create Plan</h2>
 </PlanModal>
 <CreateTaskModal bind:showCreateModal on:newTask={newTask} plans={plan_names}>
 	<h2 slot="header">Create New Task</h2>
@@ -124,7 +172,7 @@
 					<h3>{task.task_name}</h3>
 					<p>{task.task_description}</p>
 					<p>Owner: {task.task_owner}</p>
-					<button on:click={() => alert(`#details-${task.task_id}`)}>View</button>
+					<button on:click={() => viewTask(task.task_id)}>View</button>
 				</div>
 			{/each}
 		</div>

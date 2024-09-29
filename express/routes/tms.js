@@ -10,6 +10,7 @@ const taskC = require("../controllers/task");
 router.get("/apps/all", auth.verifyToken, appC.getAllApp);
 router.post("/apps/create", auth.verifyToken, appC.createApp);
 router.post("/apps/getOne", auth.verifyToken, appC.getApp);
+router.put("/apps/update", auth.verifyToken, appC.updateApp);
 
 //Plans
 router.post("/plans/all", auth.verifyToken, planC.getAllPlan);
