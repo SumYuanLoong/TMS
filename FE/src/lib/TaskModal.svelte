@@ -21,17 +21,66 @@
 	let newNotes = '';
 	let errorState = false;
 	let errMsg = '';
+	let upButton = '';
+	let downButton = '';
+	let demoteVisible = false;
+
+	let planChange = false;
+	let notesChange = false;
 
 	$: if (dialog && showTaskModal) dialog.showModal();
+	$: {
+		if (taskState == 'Open') {
+			demoteVisible = false;
+			upButton = 'Release';
+		} else if (taskState == 'Todo') {
+			demoteVisible = false;
+			upButton = 'Take on';
+		} else if (taskState == 'Doing') {
+			demoteVisible = true;
+			upButton = 'To Review';
+			downButton = 'Give up';
+		} else if (taskState == 'Done') {
+			demoteVisible = true;
+			upButton = 'Approve';
+			downButton = 'Reject';
+		} else {
+			demoteVisible = false;
+		}
+	}
 
-	function btnClick() {
+	async function saveClick() {
 		dispatch('newPlan', {
 			planName: planName
 		});
 		planName = '';
 	}
+
+	async function demoteClick(params) {
+		//2 states to manage Doing and Done
+		if (taskState == 'Doing') {
+			// send to Todo
+		} else if (taskState == 'Done') {
+			//send to Doing
+		}
+	}
+
+	async function promoteClick(params) {
+		if (taskState == 'Open') {
+			if (planChange) {
+				//update plan
+			}
+			if (notesChange) {
+				//update Notes
+			}
+		} else if (taskState == 'Todo') {
+		} else if (taskState == 'Doing') {
+		} else if (taskState == 'Done') {
+		}
+	}
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
 	on:close={() => {
@@ -46,53 +95,79 @@
 		{#if errorState}
 			<p class="error">{errMsg}</p>
 		{/if}
-		<form on:submit|preventDefault={btnClick}>
-			<div>
-				<p style="width: 100%;">ID : {taskID}</p>
-			</div>
-			<div>
-				<p style="width: 100%;">Name : {taskName}</p>
-			</div>
-			<div>
-				<label for="new group name">Description:</label> <br />
-				<textarea style="width: 100%;" bind:value={taskDescription} rows="6" />
-			</div>
-			<div>
-				<p style="width: 100%;">State : {taskState}</p>
-			</div>
+		<form>
+			<div class="top_container">
+				<div class="left_side">
+					<div>
+						<p style="width: 100%;">ID : {taskID}</p>
+					</div>
+					<div>
+						<p style="width: 100%;">Name : {taskName}</p>
+					</div>
+					<div>
+						<label for="new group name">Description:</label> <br />
+						<textarea style="width: 100%;" bind:value={taskDescription} rows="6" disabled />
+					</div>
+					<div>
+						<p style="width: 100%;">State : {taskState}</p>
+					</div>
 
-			<div>
-				<label for="create">Plan:</label>
-				<select bind:value={planName} disabled={flagPlan}>
-					<option value="">Select group</option>
-					{#each plans as plan}
-						<option value={plan}>{plan}</option>
-					{/each}
-				</select>
+					<div>
+						<label for="create">Plan:</label>
+						<select
+							bind:value={planName}
+							disabled={!flagPlan || flagNone}
+							on:change={() => (planChange = true)}
+						>
+							<option value="">Select group</option>
+							{#each plans as plan}
+								<option value={plan}>{plan}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<p style="width: 100%;">Creator : {taskCreator}</p>
+					</div>
+					<div>
+						<p style="width: 100%;">Owner : {taskOwner}</p>
+					</div>
+					<div>
+						<p style="width: 100%;">Created date : {taskCreatedDate}</p>
+					</div>
+				</div>
+				<div class="right_side">
+					<label for="new group name">Notes:</label> <br />
+					<p class="notes">{taskNotes}</p>
+					<textarea
+						style="width: 100%;"
+						bind:value={newNotes}
+						disabled={!flagNotes || flagNone}
+						on:change={() => (notesChange = true)}
+					/>
+				</div>
 			</div>
-			<div>
-				<label for="new group name">Start Date:</label> <br />
-				<p>{taskNotes}</p>
-				<textarea style="width: 100%;" bind:value={newNotes} disabled={flagNotes} />
+			<div class="bottom_container">
+				<!-- TODO: Change the text of the buttons to use the words in the user stories-->
+				{#if !flagNone}<button class="submitBtn" on:click={saveClick}>Save</button>{/if}
+				{#if demoteVisible && !flagNone}<button class="demoteBtn" on:click={demoteClick}
+						>{downButton}</button
+					>{/if}
+				{#if !flagNone}<button class="promoteBtn" on:click={promoteClick}>{upButton}</button>{/if}
+				<!-- svelte-ignore a11y-autofocus -->
+				<button on:click={() => dialog.close()}>Close</button>
 			</div>
-			<button class="submitBtn" type="submit">Save</button>
-			<button class="submitBtn" type="submit">Demote</button>
-			<button class="submitBtn" type="submit">Promote</button>
 		</form>
-		<!-- svelte-ignore a11y-autofocus -->
-		<button on:click={() => dialog.close()}>Close</button>
 	</div>
 </dialog>
 
 <style>
 	dialog {
-		max-width: 48em;
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 1200px;
-		height: 36em;
+		width: 72em;
+		height: 64em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
@@ -135,14 +210,48 @@
 		cursor: pointer;
 		margin: 5px;
 		border-radius: 5px;
+		width: 8em;
 	}
 	.submitBtn {
 		background-color: #007bff;
 		color: white;
 		border: none;
 	}
+	.demoteBtn {
+		background-color: red;
+		color: white;
+		border: none;
+	}
+	.promoteBtn {
+		background-color: green;
+		color: white;
+		border: none;
+	}
 	.error {
 		color: white;
 		background-color: red;
+	}
+	form {
+		flex-direction: column;
+		display: flex;
+	}
+	.top_container {
+		display: flex;
+		flex-direction: row;
+		height: 72em;
+		flex: 9;
+	}
+	.right_side,
+	.left_side {
+		flex: 1;
+		display: flex; /* For vertical alignment within each div */
+		flex-direction: column;
+		margin: 1em;
+	}
+	.bottom_container {
+		flex: 1;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
 	}
 </style>

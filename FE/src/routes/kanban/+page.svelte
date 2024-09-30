@@ -117,9 +117,16 @@
 			});
 			if (res.data.success) {
 				console.log(res.data);
-
-				showTaskModal = true;
 				taskData = res.data.task;
+				if (permissions.includes(taskData.Task_state)) {
+					console.log('permission matches');
+					flagNone = false;
+					flagNotes = true;
+					if (taskData.Task_state == 'Done' || taskData.Task_state == 'Open') {
+						flagPlan = true;
+					}
+				}
+				showTaskModal = true;
 			}
 		} catch (error) {
 			if (error.response.data.message == 'Invalid Credentials') {
