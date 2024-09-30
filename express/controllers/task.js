@@ -5,6 +5,7 @@
 const pool = require("../utils/db");
 var ErrorObj = require("../utils/errorMessage");
 var jwt = require("jsonwebtoken");
+let mailer = require("../utils/mailer");
 
 /**
  * Gets all tasks of the Specific app
@@ -18,7 +19,7 @@ exports.getAllTask = async (req, res, next) => {
 	if (app_name) {
 		try {
 			let [val1] = await pool.execute(
-				"select t.task_name, t.task_description, t.task_owner, t.task_state, p.plan_colour as 'color' " +
+				"select t.task_id, t.task_name, t.task_description, t.task_owner, t.task_state, p.plan_colour as 'color' " +
 					"from task t left join plan p on t.task_plan = p.plan_mvp_name and t.task_app_acronym = p.plan_app_acronym " +
 					"where t.task_app_acronym = ?",
 				[app_name]
@@ -176,7 +177,8 @@ exports.createTask = async (req, res, next) => {
 			"Update application set app_Rnumber = ? where app_acronym = ?",
 			[Rnum, app_acronym]
 		);
-		pool.query("COMMIT");
+		await pool.query("COMMIT");
+
 		res.status(200).json({
 			success: true
 		});
@@ -200,3 +202,20 @@ exports.createTask = async (req, res, next) => {
 exports.updateTask = async (req, res, next) => {};
 
 // What to do for change state
+
+/**
+ * sample usage: sendEmail(username, task_name, username, app_acronym);
+ * @param {*} user task creator
+ * @param {*} task_name
+ * @param {*} promotor user that promoted it
+ * @param {*} app_acronym
+ */
+async function sendEmail(user, task_name, promotor, app_acronym) {
+	const info = mailer.sendMail({
+		from: '"TMS" <no-reply.TMS@ethereal.email>', // sender address
+		to: `${user}@ethereal.email`, // list of receivers
+		subject: `${task_name} is done`, // Subject line
+		text: `${task_name} for ${app_acronym} has been promoted to the done state by ${promotor}` // plain text body
+		//html: "<b>Hello world?</b>" // html body
+	});
+}
