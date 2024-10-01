@@ -61,11 +61,22 @@
 
 	async function saveClick() {
 		console.log('save');
-
-		dispatch('updateTask', {
-			planName,
-			newNotes
-		});
+		if (planChange || notesChange) {
+			if (planChange) {
+				dispatch('updatePlan', {
+					planName,
+					task_id: taskID
+				});
+			}
+			if (notesChange) {
+				dispatch('updateTask', {
+					task_id: taskID,
+					newNotes
+				});
+			}
+		} else {
+			dialog.close();
+		}
 	}
 
 	async function demoteClick(params) {

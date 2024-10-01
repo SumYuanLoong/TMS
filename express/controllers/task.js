@@ -221,7 +221,7 @@ exports.createTask = async (req, res, next) => {
  * @param {*} next
  */
 exports.updateTaskPlan = async (req, res, next) => {
-	let { task_id, plan_name } = req.body;
+	let { task_id, plan_name, app_acronym } = req.body;
 	let token = req.cookies.token;
 	let decoded = await jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
@@ -229,28 +229,30 @@ exports.updateTaskPlan = async (req, res, next) => {
 	//TODO: Plan validation, plan must exist in the app provided, but plan can be null
 
 	//do validation
-	try {
-		let [val] = await pool.execute(
-			`select exists(select 1 from plan where Plan_app_Acronym = ? and Plan_MVP_name = ?) as plan_exists`,
-			[app_acronym, plan_name]
-		);
-		if (!val[0].plan_exists) {
-			return res.status(404).json({
+	if (plan_name) {
+		try {
+			let [val] = await pool.execute(
+				`select exists(select 1 from plan where Plan_app_Acronym = ? and Plan_MVP_name = ?) as plan_exists`,
+				[app_acronym, plan_name]
+			);
+			if (!val[0].plan_exists) {
+				return res.status(404).json({
+					success: false,
+					message: "Provided Plan does not exist"
+				});
+			}
+		} catch (error) {
+			return res.status(500).json({
 				success: false,
-				message: "Provided Plan does not exist"
+				message: "Database Error task not updated"
 			});
 		}
-	} catch (error) {
-		return res.status(500).json({
-			success: false,
-			message: "Database Error task not updated"
-		});
 	}
 
 	try {
 		let [val] = await pool.execute(
 			`update task set task_plan = ?, task_owner = ? where task_id = ?`,
-			[plan_name, username, task_id]
+			[plan_name || null, username, task_id]
 		);
 		res.status(200).json({
 			success: true

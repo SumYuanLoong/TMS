@@ -86,7 +86,7 @@
 	endDate={editData.App_endDate}
 	create={editData.App_permit_Create}
 	open={editData.App_permit_Open}
-	todo={editData.App_permit_toDoList}
+	todo={editData.App_permit_Todo}
 	doing={editData.App_permit_Doing}
 	done={editData.App_permit_Done}
 >

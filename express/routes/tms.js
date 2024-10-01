@@ -40,7 +40,12 @@ router.post(
 	auth.authorizedForRoles("PM"),
 	planC.createPlan
 );
-router.post
+router.put(
+	"/plans/update",
+	auth.verifyToken,
+	auth.authorizedForRoles("PM"),
+	planC.updatePlan
+);
 
 //Tasks
 router.post("/tasks/all", auth.verifyToken, taskC.getAllTask);

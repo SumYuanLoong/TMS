@@ -88,6 +88,8 @@
 		}
 	}
 
+	async function updatePlan(params) {}
+
 	async function newTask(event) {
 		console.log(event.detail);
 		try {
@@ -136,10 +138,43 @@
 			console.log(error.response.data);
 		}
 	}
+
+	async function saveTaskPlan(event) {
+		try {
+			let res = await axios.post('/tms/tasks/plan', {
+				app_acronym: $app_name,
+				plan_name: event.detail.planName,
+				task_id: event.detail.task_id
+			});
+			if (res.data.success) {
+				viewTask(event.detail.task_id);
+			}
+		} catch (error) {
+			//toaster
+			console.log(error);
+		}
+	}
+
+	async function saveTaskNotes(event) {
+		try {
+			let res = await axios.post('/tms/tasks/notes', {
+				task_id: event.detail.task_id,
+				new_notes: event.detail.newNotes
+			});
+			if (res.data.success) {
+				viewTask(event.detail.task_id);
+			}
+		} catch (error) {
+			//toaster
+			console.log(error);
+		}
+	}
 </script>
 
 <TaskModal
 	bind:showTaskModal
+	on:updateNotes={saveTaskNotes}
+	on:updatePlan={saveTaskPlan}
 	{flagNone}
 	{flagNotes}
 	{flagPlan}
