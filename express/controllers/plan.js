@@ -94,17 +94,18 @@ exports.updatePlan = async (req, res, next) => {
 		});
 	}
 
-	//date validation
-	if (
-		isValidDate(plan_startDate) &&
-		isValidDate(plan_endDate) &&
-		!isDateAfter(plan_startDate, plan_endDate)
-	) {
-	} else {
+	// date validation
+	if (!isValidDate(startDate) || !isValidDate(endDate)) {
 		//fail
-		res.status(400).json({
+		return res.status(400).json({
 			success: false,
-			message: "Date values provided are invalid"
+			message: "Date values provide are invalid"
+		});
+	} else if (isDateAfter(startDate, endDate)) {
+		//fail
+		return res.status(400).json({
+			success: false,
+			message: "Start Date after end date"
 		});
 	}
 
@@ -128,7 +129,7 @@ exports.updatePlan = async (req, res, next) => {
 
 	try {
 		let [val] = await pool.execute(
-			"update users set plan_startDate = ?, plan_endDate = ?, plan_colour = ? where plan_MVP_name = ? ",
+			"update plan set plan_startDate = ?, plan_endDate = ?, plan_colour = ? where plan_MVP_name = ? ",
 			[plan_name]
 		);
 		if (val[0].plan_exists) {
@@ -162,19 +163,18 @@ exports.createPlan = async (req, res, next) => {
 	/**
 	 * colour?
 	 */
-	//date validation
-	if (
-		isValidDate(plan_startDate) &&
-		isValidDate(plan_endDate) &&
-		!isDateAfter(plan_startDate, plan_endDate)
-	) {
-	} else {
+	// date validation
+	if (!isValidDate(startDate) || !isValidDate(endDate)) {
 		//fail
-		console.log(plan_startDate);
-		console.log(plan_endDate);
 		return res.status(400).json({
 			success: false,
-			message: "Date values provided are invalid"
+			message: "Date values provide are invalid"
+		});
+	} else if (isDateAfter(startDate, endDate)) {
+		//fail
+		return res.status(400).json({
+			success: false,
+			message: "Start Date after end date"
 		});
 	}
 
@@ -213,6 +213,13 @@ exports.createPlan = async (req, res, next) => {
 
 	if (colour) {
 		//check for 6 characters only hexadec
+		const hexColorRegex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+		if (!hexColorRegex.test(colour)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid colour code"
+			});
+		}
 	}
 
 	// the final insert
