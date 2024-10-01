@@ -13,7 +13,7 @@ const actions = {
 };
 
 /**
- * Gets all tasks of the Specific app
+ * Gets all task of the Specific app
  * @param {*} req
  * @param {*} res
  * @param {*} next
@@ -130,8 +130,8 @@ exports.createTask = async (req, res, next) => {
 	const yyyy = today.getFullYear();
 	const formattedDate = `${dd}-${mm}-${yyyy}`;
 
-	const hours = now.getHours().toString().padStart(2, "0");
-	const minutes = now.getMinutes().toString().padStart(2, "0");
+	const hours = today.getHours().toString().padStart(2, "0");
+	const minutes = today.getMinutes().toString().padStart(2, "0");
 	const formattedDatetime = `${dd}-${mm}-${yyyy}, ${hours}:${minutes}`;
 
 	//TODO: Plan validation, plan must exist in the app provided, but plan can be null
@@ -252,6 +252,9 @@ exports.updateTaskPlan = async (req, res, next) => {
 			`update task set task_plan = ?, task_owner = ? where task_id = ?`,
 			[plan_name, username, task_id]
 		);
+		res.status(200).json({
+			success: true
+		});
 	} catch (error) {
 		return res.status(500).json({
 			success: false,
@@ -304,7 +307,7 @@ exports.promoteTask2Todo = async (req, res, next) => {
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 1 then true else false end as task_is_open
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_open) {
@@ -325,15 +328,21 @@ exports.promoteTask2Todo = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"Todo",
-				null,
-				getDatetime(),
-				actions.promote,
-				null,
-				task_id
-			);
+			if (
+				await updateTaskNotes(
+					username,
+					"Todo",
+					null,
+					getDatetime(),
+					actions.promote,
+					null,
+					task_id
+				)
+			) {
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
 		return res.status(500).json({
@@ -353,7 +362,7 @@ exports.promoteTask2Doing = async (req, res, next) => {
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 2 then true else false end as task_is_Todo
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_Todo) {
@@ -374,17 +383,24 @@ exports.promoteTask2Doing = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"Doing",
-				null,
-				getDatetime(),
-				actions.promote,
-				null,
-				task_id
-			);
+			if (
+				await updateTaskNotes(
+					username,
+					"Doing",
+					null,
+					getDatetime(),
+					actions.promote,
+					null,
+					task_id
+				)
+			) {
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({
 			success: false,
 			message: "Database Error task not updated"
@@ -399,10 +415,11 @@ exports.promoteTask2Done = async (req, res, next) => {
 	let decoded = await jwt.verify(token, process.env.JWT_secret);
 	let username = decoded.username;
 
+	let email, task_name, task_app_acronym;
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 3 then true else false end as task_is_doing
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_doing) {
@@ -423,31 +440,37 @@ exports.promoteTask2Done = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"Done",
-				null,
-				getDatetime(),
-				actions.promote,
-				null,
-				task_id
-			);
-
-			//need task_creator, email address, task_name,
-			let [vals] = await pool.execute(
-				`select u.email, t.task_name, t.task_app_acronym from task t 
+			if (
+				await updateTaskNotes(
+					username,
+					"Done",
+					null,
+					getDatetime(),
+					actions.promote,
+					null,
+					task_id
+				)
+			) {
+				//need task_creator, email address, task_name,
+				let [vals] = await pool.execute(
+					`select u.email, t.task_name, t.task_app_acronym from task t 
 				join users u on t.Task_creator = u.user_name where task_id = ?`,
-				[task_id]
-			);
-			if (vals[0]) {
-				const email = vals[0].email;
-				const task_name = vals[0].task_name;
-				const task_app_acronym = vals[0].task_app_acronym;
-			}
+					[task_id]
+				);
+				if (vals[0]) {
+					email = vals[0].email;
+					task_name = vals[0].task_name;
+					task_app_acronym = vals[0].task_app_acronym;
+				}
 
-			await sendEmail(email, task_name, username, task_app_acronym);
+				await sendEmail(email, task_name, username, task_app_acronym);
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({
 			success: false,
 			message: "Database Error task not updated"
@@ -465,7 +488,7 @@ exports.promoteTask2Close = async (req, res, next) => {
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 4 then true else false end as task_is_done
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_done) {
@@ -486,17 +509,24 @@ exports.promoteTask2Close = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"",
-				null,
-				getDatetime(),
-				actions.promote,
-				null,
-				task_id
-			);
+			if (
+				await updateTaskNotes(
+					username,
+					"Closed",
+					null,
+					getDatetime(),
+					actions.promote,
+					null,
+					task_id
+				)
+			) {
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({
 			success: false,
 			message: "Database Error task not updated"
@@ -514,7 +544,7 @@ exports.demoteTask2Doing = async (req, res, next) => {
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 4 then true else false end as task_is_done
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_done) {
@@ -535,64 +565,21 @@ exports.demoteTask2Doing = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"Doing",
-				null,
-				getDatetime(),
-				actions.demote,
-				null,
-				task_id
-			);
-		}
-	} catch (error) {
-		return res.status(500).json({
-			success: false,
-			message: "Database Error task not updated"
-		});
-	}
-};
-
-exports.demoteTask2Doing = async (req, res, next) => {
-	let { task_id, current_state } = req.body;
-
-	let token = req.cookies.token;
-	let decoded = await jwt.verify(token, process.env.JWT_secret);
-	let username = decoded.username;
-
-	try {
-		let [check] = await pool.execute(
-			`select case when task_state = 4 then true else false end as task_is_done
-			from tasks where task_id = ?`,
-			[task_id]
-		);
-		if (!check[0].task_is_done) {
-			return res.status(400).json({
-				success: false,
-				message:
-					"Task is not in done state and cannot be demoted to doing"
-			});
-		}
-
-		let [val] = await pool.execute(
-			`update task set task_state = 3, task_owner = ? where task_id = ?`,
-			[username, task_id]
-		);
-		if (val.affectedRows === 0) {
-			return res.status(500).json({
-				success: false,
-				message: "Task is not updated"
-			});
-		} else {
-			await updateTaskNotes(
-				username,
-				"Doing",
-				null,
-				getDatetime(),
-				actions.demote,
-				null,
-				task_id
-			);
+			if (
+				await updateTaskNotes(
+					username,
+					"Doing",
+					null,
+					getDatetime(),
+					actions.demote,
+					null,
+					task_id
+				)
+			) {
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
 		return res.status(500).json({
@@ -612,7 +599,7 @@ exports.demoteTask2Todo = async (req, res, next) => {
 	try {
 		let [check] = await pool.execute(
 			`select case when task_state = 3 then true else false end as task_is_doing
-			from tasks where task_id = ?`,
+			from task where task_id = ?`,
 			[task_id]
 		);
 		if (!check[0].task_is_doing) {
@@ -633,15 +620,21 @@ exports.demoteTask2Todo = async (req, res, next) => {
 				message: "Task is not updated"
 			});
 		} else {
-			await updateTaskNotes(
-				username,
-				"Todo",
-				null,
-				getDatetime(),
-				actions.demote,
-				null,
-				task_id
-			);
+			if (
+				await updateTaskNotes(
+					username,
+					"Todo",
+					null,
+					getDatetime(),
+					actions.demote,
+					null,
+					task_id
+				)
+			) {
+				res.status(200).json({
+					success: true
+				});
+			}
 		}
 	} catch (error) {
 		return res.status(500).json({
@@ -675,8 +668,8 @@ function getDatetime() {
 	const dd = String(today.getDate()).padStart(2, "0");
 	const mm = String(today.getMonth() + 1).padStart(2, "0");
 	const yyyy = today.getFullYear();
-	const hours = now.getHours().toString().padStart(2, "0");
-	const minutes = now.getMinutes().toString().padStart(2, "0");
+	const hours = today.getHours().toString().padStart(2, "0");
+	const minutes = today.getMinutes().toString().padStart(2, "0");
 	return `${dd}-${mm}-${yyyy}, ${hours}:${minutes}`;
 }
 
@@ -699,18 +692,19 @@ async function updateTaskNotes(
 	notes,
 	task_id
 ) {
-	let newNotes = `${username} at ${dateTime}`;
+	let newNotes = `${username} at ${dateTime} `;
 	if (task_plan) {
-		newNotes += `has changed the plan to ${task_plan}`;
+		newNotes += `has changed the plan to ${task_plan}\n`;
 	} else if (task_state) {
-		newNotes += `has ${action} to ${task_state}`;
+		newNotes += `has ${action} to ${task_state}\n`;
 	} else if (notes) {
-		newNotes += `has added the notes: \n${task_plan}`;
+		newNotes += `has added the notes: \n${notes}\n`;
 	}
+	newNotes += `######################################\n\n`;
 
 	try {
 		let [val] = await pool.execute(
-			"update tasks set task_notes = concat(?, task_notes) where task_id =?",
+			"update task set Task_notes = CONCAT(?, Task_notes) where task_id = ?",
 			[newNotes, task_id]
 		);
 		return true;

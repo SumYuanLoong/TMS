@@ -84,7 +84,7 @@ exports.verifyToken = async (req, res, next) => {
 		token = req.cookies.token;
 	} else {
 		// token not found
-		return next(new ErrorObj("Invalid token", 401, "no token"));
+		return next(new ErrorObj("Invalid Credentials", 401, "no token"));
 	}
 
 	//Check token is valid
@@ -95,12 +95,12 @@ exports.verifyToken = async (req, res, next) => {
 			decoded.browser != req.headers["user-agent"] || // user-agent or ip no match
 			decoded.ipaddress != req.ip
 		) {
-			return next(new ErrorObj("Invalid token", 401, ""));
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
 		}
 	} catch (error) {
 		// this will catch if token expires
 		console.log(error);
-		return next(new ErrorObj("Invalid token", 401, ""));
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
 	let username = decoded.username;
@@ -116,10 +116,10 @@ exports.verifyToken = async (req, res, next) => {
 		}
 	} catch (error) {
 		//console.error(error);
-		return next(new ErrorObj("Invalid token", 401, ""));
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
 	}
 
-	next();
+	return next();
 };
 
 /**
@@ -196,7 +196,7 @@ exports.authApp = async (req, res, next) => {
 
 	try {
 		let [app_permits] = await pool.execute(
-			"select app_permit_create, app_permit_open, app_permit_toDoList, app_permit_Doing, app_permit_Done from application where app_acronym = ?",
+			"select app_permit_create, app_permit_open, app_permit_Todo, app_permit_Doing, app_permit_Done from application where app_acronym = ?",
 			[app_acronym]
 		);
 		app_permits = app_permits[0];
@@ -216,7 +216,7 @@ exports.authApp = async (req, res, next) => {
 			if (app_permits.app_permit_open == group.group_name) {
 				permissions.add("Open");
 			}
-			if (app_permits.app_permit_toDoList == group.group_name) {
+			if (app_permits.app_permit_Todo == group.group_name) {
 				permissions.add("Todo");
 			}
 			if (app_permits.app_permit_Doing == group.group_name) {
@@ -275,24 +275,24 @@ exports.authorisedForTasks = async (req, res, next) => {
 	let state = "";
 	let role = "";
 
-	let { task_id, app_id } = req.body;
-	if (!task_id) {
+	let { task_id, app_acronym } = req.body;
+	if (task_id) {
 		try {
-			let [val] = pool.execute(
-				"select task_state from task where task_id = ?",
-				task_id
+			let [val] = await pool.execute(
+				`select task_state from task where task_id = ?`,
+				[task_id]
 			);
 			state = val[0].task_state;
 		} catch (error) {
 			return next(new ErrorObj("Cant find task", 401, ""));
 		}
 	} else {
-		state = "create";
+		state = "Create";
 	}
 
 	let query = `select app_permit_${state} from Application where app_acronym = ?`;
 	try {
-		let [val] = await pool.execute(query, [app_id]);
+		let [val] = await pool.execute(query, [app_acronym]);
 		const prop = "app_permit_" + state;
 		role = val[0][prop];
 	} catch (error) {

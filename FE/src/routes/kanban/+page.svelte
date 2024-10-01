@@ -31,15 +31,16 @@
 	 * done: notes and plan
 	 */
 
-	let columns = {
-		Open: [],
-		Todo: [],
-		Doing: [],
-		Done: [],
-		Close: []
-	};
+	let columns = {};
 	$: {
 		//console.log('re-org tasks ' + tasks.length);
+		columns = {
+			Open: [],
+			Todo: [],
+			Doing: [],
+			Done: [],
+			Closed: []
+		};
 		tasks.forEach((task) => {
 			if (columns[task.task_state]) {
 				columns[task.task_state].push(task);
@@ -107,8 +108,6 @@
 		}
 	}
 
-	async function updateTask() {}
-
 	// task Modal setup
 	async function viewTask(task_id) {
 		try {
@@ -125,6 +124,8 @@
 					if (taskData.Task_state == 'Done' || taskData.Task_state == 'Open') {
 						flagPlan = true;
 					}
+				} else {
+					flagNone = true;
 				}
 				showTaskModal = true;
 			}
@@ -139,7 +140,6 @@
 
 <TaskModal
 	bind:showTaskModal
-	on:newApp={updateTask}
 	{flagNone}
 	{flagNotes}
 	{flagPlan}
@@ -153,6 +153,7 @@
 	taskCreatedDate={taskData.Task_createDate}
 	planName={taskData.Task_plan}
 	plans={plan_names}
+	app_acronym={$app_name}
 >
 	<h2 slot="header">Task Detail</h2>
 </TaskModal>

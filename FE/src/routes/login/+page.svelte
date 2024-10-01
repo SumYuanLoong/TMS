@@ -11,7 +11,7 @@
 			toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 		} else {
 			try {
-				const res = await axios.post(`http://localhost:3000/auth/login`, {
+				const res = await axios.post(`/auth/login`, {
 					username: username,
 					password: password
 				});

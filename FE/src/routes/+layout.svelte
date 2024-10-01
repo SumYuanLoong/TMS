@@ -26,7 +26,7 @@
 			}
 		} catch (err) {
 			//token not there
-			if (err.response.data.message == 'Invalid token') {
+			if (err.response.data.message == 'Invalid Credentials') {
 				goto('/logout');
 			}
 		}

@@ -1,6 +1,8 @@
 <script>
 	export let showTaskModal; // boolean
-	import { createEventDispatcher } from 'svelte';
+	import { beforeUpdate, createEventDispatcher } from 'svelte';
+	import { axios } from './config';
+	import { invalidate } from '$app/navigation';
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
@@ -17,6 +19,7 @@
 	export let taskCreator = '';
 	export let taskOwner = '';
 	export let taskCreatedDate = '';
+	export let app_acronym = '';
 
 	let newNotes = '';
 	let errorState = false;
@@ -24,12 +27,19 @@
 	let upButton = '';
 	let downButton = '';
 	let demoteVisible = false;
-
-	let planChange = false;
+	let onlyReject = false;
+	$: planChange = false;
 	let notesChange = false;
 
 	$: if (dialog && showTaskModal) dialog.showModal();
 	$: {
+		if (taskState == 'Done' && planChange) {
+			onlyReject = true;
+		}
+	}
+
+	beforeUpdate(() => {
+		console.log('trigger');
 		if (taskState == 'Open') {
 			demoteVisible = false;
 			upButton = 'Release';
@@ -47,35 +57,78 @@
 		} else {
 			demoteVisible = false;
 		}
-	}
+	});
 
 	async function saveClick() {
-		dispatch('newPlan', {
-			planName: planName
+		console.log('save');
+
+		dispatch('updateTask', {
+			planName,
+			newNotes
 		});
-		planName = '';
 	}
 
 	async function demoteClick(params) {
 		//2 states to manage Doing and Done
+		console.log('demote');
+		let res1;
+		await saveClick();
 		if (taskState == 'Doing') {
 			// send to Todo
+			res1 = await axios.put('/tms/tasks/demoteTask2Todo', {
+				task_id: taskID,
+				app_acronym
+			});
 		} else if (taskState == 'Done') {
 			//send to Doing
+			res1 = await axios.put('/tms/tasks/demoteTask2Doing', {
+				task_id: taskID,
+				app_acronym
+			});
+		}
+		console.log(res1);
+		if (res1.data?.success) {
+			invalidate('app:kanban');
+			//toaster
+			dialog.close();
+		} else {
+			console.log(res1.data.response.message);
 		}
 	}
 
 	async function promoteClick(params) {
+		console.log('promote');
+		let res1;
+		// Save infomation either notes or plan
+		await saveClick();
 		if (taskState == 'Open') {
-			if (planChange) {
-				//update plan
-			}
-			if (notesChange) {
-				//update Notes
-			}
+			res1 = await axios.put('/tms/tasks/promoteTask2Todo', {
+				task_id: taskID,
+				app_acronym
+			});
 		} else if (taskState == 'Todo') {
+			res1 = await axios.put('/tms/tasks/promoteTask2Doing', {
+				task_id: taskID,
+				app_acronym
+			});
 		} else if (taskState == 'Doing') {
+			res1 = await axios.put('/tms/tasks/promoteTask2Done', {
+				task_id: taskID,
+				app_acronym
+			});
 		} else if (taskState == 'Done') {
+			res1 = await axios.put('/tms/tasks/promoteTask2Close', {
+				task_id: taskID,
+				app_acronym
+			});
+		}
+		console.log(res1);
+		if (res1.data?.success) {
+			invalidate('app:kanban');
+			//toaster
+			dialog.close();
+		} else {
+			console.log(res1.data.response.message);
 		}
 	}
 </script>
@@ -86,6 +139,10 @@
 	on:close={() => {
 		showTaskModal = false;
 		errorState = false;
+		planChange = false;
+		notesChange = false;
+		onlyReject = false;
+		demoteVisible = false;
 	}}
 	on:click|self={() => dialog.close()}
 >
@@ -106,7 +163,12 @@
 					</div>
 					<div>
 						<label for="new group name">Description:</label> <br />
-						<textarea style="width: 100%;" bind:value={taskDescription} rows="6" disabled />
+						<textarea
+							style="width: 100%;white-space: pre-line;"
+							bind:value={taskDescription}
+							rows="6"
+							disabled
+						/>
 					</div>
 					<div>
 						<p style="width: 100%;">State : {taskState}</p>
@@ -137,7 +199,7 @@
 				</div>
 				<div class="right_side">
 					<label for="new group name">Notes:</label> <br />
-					<p class="notes">{taskNotes}</p>
+					<p class="notes" style="white-space: pre-line;">{taskNotes}</p>
 					<textarea
 						style="width: 100%;"
 						bind:value={newNotes}
@@ -148,11 +210,15 @@
 			</div>
 			<div class="bottom_container">
 				<!-- TODO: Change the text of the buttons to use the words in the user stories-->
-				{#if !flagNone}<button class="submitBtn" on:click={saveClick}>Save</button>{/if}
+				{#if !flagNone}<button class="submitBtn" on:click={saveClick} disabled={onlyReject}
+						>Save</button
+					>{/if}
 				{#if demoteVisible && !flagNone}<button class="demoteBtn" on:click={demoteClick}
 						>{downButton}</button
 					>{/if}
-				{#if !flagNone}<button class="promoteBtn" on:click={promoteClick}>{upButton}</button>{/if}
+				{#if !flagNone}<button class="promoteBtn" on:click={promoteClick} disabled={onlyReject}
+						>{upButton}</button
+					>{/if}
 				<!-- svelte-ignore a11y-autofocus -->
 				<button on:click={() => dialog.close()}>Close</button>
 			</div>
@@ -174,13 +240,14 @@
 	}
 	dialog > div {
 		padding: 1em;
+		height: 100%;
 	}
 	dialog[open] {
 		animation: zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 	}
 	@keyframes zoom {
 		from {
-			transform: scale(0.95);
+			transform: scale(0.9);
 		}
 		to {
 			transform: scale(1);
@@ -226,6 +293,10 @@
 		background-color: green;
 		color: white;
 		border: none;
+	}
+	.promoteBtn:disabled,
+	.submitBtn:disabled {
+		background-color: slategrey;
 	}
 	.error {
 		color: white;
