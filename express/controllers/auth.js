@@ -84,7 +84,7 @@ exports.verifyToken = async (req, res, next) => {
 		token = req.cookies.token;
 	} else {
 		// token not found
-		return next(new ErrorObj("Authentication needed", 401, "no token"));
+		return next(new ErrorObj("Invalid token", 401, "no token"));
 	}
 
 	//Check token is valid
