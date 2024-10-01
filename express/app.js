@@ -48,5 +48,6 @@ app.all("*", (req, res, next) => {
 app.use(Errorhandler);
 
 console.log("app has started up");
+console.log("CHANGE DB FROM TODOLIST TO TODO");
 
 module.exports = app;
