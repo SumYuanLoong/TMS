@@ -105,7 +105,7 @@ exports.updateApp = async (req, res, next) => {
 	// Update the application record
 	try {
 		let [val] = await pool.query(
-			`update application set App_Description = ?, App_permit_Create = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done =? WHERE app_acronym = ?`,
+			`update application set App_Description = ?, App_permit_Create = ?, App_permit_Open = ?, App_permit_Todo = ?, App_permit_Doing = ?, App_permit_Done =? WHERE app_acronym = ?`,
 			[
 				description,
 				permit_create,
@@ -239,7 +239,7 @@ exports.createApp = async (req, res, next) => {
 	try {
 		let [val] = await pool.execute(
 			"insert into `application` (`App_Acronym`, `App_Description`, `app_Rnumber`, `app_startDate`, " +
-				"`app_endDate`, `App_permit_Create`,`App_permit_Open`,`App_permit_toDoList`,`App_permit_Doing`, " +
+				"`app_endDate`, `App_permit_Create`,`App_permit_Open`,`App_permit_Todo`,`App_permit_Doing`, " +
 				"`App_permit_Done` ) values " +
 				"(?,?,?,?,?,?,?,?,?,?)",
 			[

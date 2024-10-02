@@ -69,7 +69,7 @@
 				});
 			}
 			if (notesChange) {
-				dispatch('updateTask', {
+				dispatch('updateNotes', {
 					task_id: taskID,
 					newNotes
 				});
@@ -210,7 +210,9 @@
 				</div>
 				<div class="right_side">
 					<label for="new group name">Notes:</label> <br />
-					<p class="notes" style="white-space: pre-line;">{taskNotes}</p>
+					<p class="notes" style="white-space: pre; max-height: 25em; overflow: scroll;">
+						{taskNotes}
+					</p>
 					<textarea
 						style="width: 100%;"
 						bind:value={newNotes}
@@ -243,8 +245,8 @@
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 72em;
-		height: 64em;
+		width: 64em;
+		max-height: 64em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);

@@ -141,7 +141,7 @@
 
 	async function saveTaskPlan(event) {
 		try {
-			let res = await axios.post('/tms/tasks/plan', {
+			let res = await axios.put('/tms/tasks/plan', {
 				app_acronym: $app_name,
 				plan_name: event.detail.planName,
 				task_id: event.detail.task_id
@@ -157,8 +157,9 @@
 
 	async function saveTaskNotes(event) {
 		try {
-			let res = await axios.post('/tms/tasks/notes', {
+			let res = await axios.put('/tms/tasks/notes', {
 				task_id: event.detail.task_id,
+				app_acronym: $app_name,
 				new_notes: event.detail.newNotes
 			});
 			if (res.data.success) {
