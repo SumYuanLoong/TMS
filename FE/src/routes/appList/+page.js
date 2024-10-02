@@ -1,6 +1,8 @@
 import { axios } from '$lib/config';
 import { title } from '$lib/stores.js';
 
+import { toast } from '@zerodevx/svelte-toast';
+
 let apps = [];
 let isPL = false;
 let groups = [];
@@ -34,6 +36,7 @@ export const load = async ({ depends }) => {
 		return { apps, isPL, groups };
 	} catch (error) {
 		console.log(error.response);
+		toast.push('Error Loading Apps', { classes: ['error-toast'], duration: 3000 });
 	}
 };
 

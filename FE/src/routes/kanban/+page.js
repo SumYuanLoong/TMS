@@ -1,6 +1,7 @@
 import { goto } from '$app/navigation';
 import { axios } from '$lib/config';
 
+import { toast } from '@zerodevx/svelte-toast';
 import { app_name, title } from '$lib/stores.js';
 
 let selected_app = '';
@@ -57,7 +58,8 @@ export const load = async ({ depends }) => {
 			permissions = res5.data.permissions;
 		}
 	} catch (error) {
-		console.log(error);
+		console.log(error.response);
+		toast.push('Error Loading Tasks', { classes: ['error-toast'], duration: 3000 });
 	}
 
 	return { tasks, plans, isPM, permissions };

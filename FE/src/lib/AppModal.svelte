@@ -23,15 +23,15 @@
 
 	async function btnClick() {
 		//TODO: validate app_name
-		const appRegex = new RegExp(/^[\w]+$/g);
+		const appRegex = new RegExp(/(^[\w]+$){1,64}/g);
 		if (!appRegex.test(app_name)) {
 			//invalid case
 			errMsg = 'Invalid App Acronym';
 			errorState = true;
 			return 0;
 		}
-		if (!Number.isInteger(rNumber)) {
-			errMsg = 'R number is not an integer';
+		if (!Number.isInteger(rNumber) || rNumber < 0) {
+			errMsg = 'R number is not an positive integer';
 			errorState = true;
 			return 0;
 		}
@@ -63,6 +63,10 @@
 			console.log(error.response.data);
 			if (error.response.data.message == 'Invalid Credentials') {
 				dispatch('auth');
+				toast.push(`Invalid Credentials`, {
+					classes: ['error-toast'],
+					duration: 5000
+				});
 			} else {
 				errMsg = error.response.data.message;
 				errorState = true;

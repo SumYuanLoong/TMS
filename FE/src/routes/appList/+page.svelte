@@ -4,6 +4,7 @@
 	import { axios } from '$lib/config';
 	import { app_name } from '$lib/stores.js';
 	import { onMount } from 'svelte';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	export let data;
 	let showModal = false;
@@ -32,7 +33,6 @@
 				app_acronym: id
 			});
 			if (res.data.success) {
-
 				showEModel = true;
 				editMode = true;
 				editData = res.data.applist[0];
@@ -42,6 +42,7 @@
 		} catch (error) {
 			if (error.response.data.message == 'Invalid Credentials') {
 				goto('/login');
+				toast.push('Invalid Credentials', { classes: ['error-toast'], duration: 3000 });
 			}
 			console.log(error.response.data);
 		}

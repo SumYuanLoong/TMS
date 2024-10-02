@@ -3,6 +3,7 @@
 	import PlanModal from '$lib/PlanModal.svelte';
 	import CreateTaskModal from '$lib/CreateTaskModal.svelte';
 
+	import { toast } from '@zerodevx/svelte-toast';
 	import { app_name } from '$lib/stores.js';
 	import { axios } from '$lib/config.js';
 	import { goto, invalidate } from '$app/navigation';
@@ -86,6 +87,10 @@
 			}
 		} catch (error) {
 			console.log(error.response.data);
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -105,7 +110,11 @@
 				showPlanModal = true;
 			}
 		} catch (error) {
-			console.log(error);
+			console.log(error.response.data);
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -124,6 +133,10 @@
 			}
 		} catch (error) {
 			console.log(error.response.data);
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -144,6 +157,10 @@
 			}
 		} catch (error) {
 			console.log(error.response.data);
+			if (error.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -171,10 +188,11 @@
 				showTaskModal = true;
 			}
 		} catch (error) {
+			console.log(error.response.data);
 			if (error.response.data.message == 'Invalid Credentials') {
 				goto('/login');
 			}
-			console.log(error.response.data);
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 		}
 	}
 
@@ -190,7 +208,7 @@
 			}
 		} catch (error) {
 			invalidate('app:kanban');
-			//toaster
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			console.log(error);
 		}
 	}
@@ -207,7 +225,7 @@
 			}
 		} catch (error) {
 			invalidate('app:kanban');
-			//toaster
+			toast.push(error.response.data.message, { classes: ['error-toast'], duration: 3000 });
 			console.log(error);
 		}
 	}

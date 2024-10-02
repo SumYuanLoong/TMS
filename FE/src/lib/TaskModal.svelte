@@ -2,7 +2,9 @@
 	export let showTaskModal; // boolean
 	import { beforeUpdate, createEventDispatcher } from 'svelte';
 	import { axios } from './config';
+	import { goto } from '$app/navigation';
 	import { invalidate } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
@@ -84,26 +86,35 @@
 		console.log('demote');
 		let res1;
 		await saveClick();
-		if (taskState == 'Doing') {
-			// send to Todo
-			res1 = await axios.put('/tms/tasks/demoteTask2Todo', {
-				task_id: taskID,
-				app_acronym
-			});
-		} else if (taskState == 'Done') {
-			//send to Doing
-			res1 = await axios.put('/tms/tasks/demoteTask2Doing', {
-				task_id: taskID,
-				app_acronym
-			});
-		}
-		if (res1.data?.success) {
-			invalidate('app:kanban');
-			//toaster
-			dialog.close();
-			showTaskModal = false;
-		} else {
-			console.log(res1.data.response.message);
+		try {
+			if (taskState == 'Doing') {
+				// send to Todo
+				res1 = await axios.put('/tms/tasks/demoteTask2Todo', {
+					task_id: taskID,
+					app_acronym
+				});
+			} else if (taskState == 'Done') {
+				//send to Doing
+				res1 = await axios.put('/tms/tasks/demoteTask2Doing', {
+					task_id: taskID,
+					app_acronym
+				});
+			}
+			if (res1.data?.success) {
+				invalidate('app:kanban');
+				//toaster
+				dialog.close();
+				showTaskModal = false;
+			} else {
+				console.log(res1.data.response.message);
+			}
+		} catch (err) {
+			console.error(err.response.data.message);
+			if (err.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(err.response.data.message, { classes: ['error-toast'], duration: 3000 });
+			return 0;
 		}
 	}
 
@@ -112,34 +123,43 @@
 		let res1;
 		// Save infomation either notes or plan
 		await saveClick();
-		if (taskState == 'Open') {
-			res1 = await axios.put('/tms/tasks/promoteTask2Todo', {
-				task_id: taskID,
-				app_acronym
-			});
-		} else if (taskState == 'Todo') {
-			res1 = await axios.put('/tms/tasks/promoteTask2Doing', {
-				task_id: taskID,
-				app_acronym
-			});
-		} else if (taskState == 'Doing') {
-			res1 = await axios.put('/tms/tasks/promoteTask2Done', {
-				task_id: taskID,
-				app_acronym
-			});
-		} else if (taskState == 'Done') {
-			res1 = await axios.put('/tms/tasks/promoteTask2Close', {
-				task_id: taskID,
-				app_acronym
-			});
-		}
-		if (res1.data?.success) {
-			invalidate('app:kanban');
-			//toaster
-			dialog.close();
-			showTaskModal = false;
-		} else {
-			console.log(res1.data.response.message);
+		try {
+			if (taskState == 'Open') {
+				res1 = await axios.put('/tms/tasks/promoteTask2Todo', {
+					task_id: taskID,
+					app_acronym
+				});
+			} else if (taskState == 'Todo') {
+				res1 = await axios.put('/tms/tasks/promoteTask2Doing', {
+					task_id: taskID,
+					app_acronym
+				});
+			} else if (taskState == 'Doing') {
+				res1 = await axios.put('/tms/tasks/promoteTask2Done', {
+					task_id: taskID,
+					app_acronym
+				});
+			} else if (taskState == 'Done') {
+				res1 = await axios.put('/tms/tasks/promoteTask2Close', {
+					task_id: taskID,
+					app_acronym
+				});
+			}
+			if (res1.data?.success) {
+				invalidate('app:kanban');
+				//toaster
+				dialog.close();
+				showTaskModal = false;
+			} else {
+				console.log(res1.data.response.message);
+			}
+		} catch (err) {
+			console.error(err.response.data.message);
+			if (err.response.data.message == 'Invalid Credentials') {
+				goto('/login');
+			}
+			toast.push(err.response.data.message, { classes: ['error-toast'], duration: 3000 });
+			return 0;
 		}
 	}
 </script>

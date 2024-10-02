@@ -4,6 +4,8 @@
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
+	let errMsg = '';
+	let errorState = false;
 	export let planName = '';
 	export let startDate = '';
 	export let endDate = '';
@@ -21,7 +23,12 @@
 	}
 	function btnClick() {
 		//do data validation here
-
+		if (planName.length > 64) {
+			//invalid case
+			errMsg = 'Plan Name too long';
+			errorState = true;
+			return 0;
+		}
 		dispatch('newPlan', {
 			planName: planName,
 			startDate: convertDateFormat(startDate),
@@ -54,11 +61,15 @@
 	bind:this={dialog}
 	on:close={() => {
 		showPlanModal = false;
+		errorState = false;
 		color = '#' + Math.floor(Math.random() * 16777215).toString(16);
 		dispatch('closePlan');
 	}}
 	on:click|self={() => dialog.close()}
 >
+	{#if errorState}
+		<p class="error">{errMsg}</p>
+	{/if}
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation class="container">
 		<slot name="header" />
