@@ -35,7 +35,7 @@ exports.getAllTask = async (req, res, next) => {
 				taskList: val1
 			});
 		} catch (error) {
-			return next(new ErrorObj("die", 500, ""));
+			return next(new ErrorObj("Error getting Tasks", 500, ""));
 		}
 	}
 };
@@ -53,7 +53,7 @@ exports.getTask = async (req, res, next) => {
 		if (val.length == 0) {
 			return res.status(404).json({
 				success: false,
-				message: "Task with this task_id not found"
+				message: "Task with task_id not found"
 			});
 		} else {
 			res.status(200).json({
@@ -62,7 +62,7 @@ exports.getTask = async (req, res, next) => {
 			});
 		}
 	} catch (error) {
-		return res.status(404).json({
+		return res.status(500).json({
 			success: false,
 			message: "Error when finding this task"
 		});
@@ -143,9 +143,9 @@ exports.createTask = async (req, res, next) => {
 				[app_acronym, plan_name]
 			);
 			if (!val[0].plan_exists) {
-				return res.status(500).json({
+				return res.status(404).json({
 					success: false,
-					message: "This Plan does not exist"
+					message: "Plan task is set to not found"
 				});
 			}
 		} catch (error) {
@@ -206,9 +206,9 @@ exports.createTask = async (req, res, next) => {
 	} catch (error) {
 		console.log(error);
 		pool.query("ROLLBACK");
-		res.status(400).json({
+		res.status(500).json({
 			success: false,
-			message: "Something wrong in transaction"
+			message: "Task creation failed"
 		});
 	}
 };
@@ -294,7 +294,8 @@ exports.updateTaskNotes = async (req, res, next) => {
 		});
 	} else {
 		res.status(500).json({
-			success: false
+			success: false,
+			message: "Notes not updated"
 		});
 	}
 };
@@ -659,13 +660,21 @@ exports.demoteTask2Todo = async (req, res, next) => {
  * @param {*} app_acronym
  */
 async function sendEmail(email, task_name, promotor, app_acronym) {
-	const info = mailer.sendMail({
-		from: '"TMS" <no-reply.TMS@ethereal.email>', // sender address
-		to: `${email}`, // list of receivers
-		subject: `${task_name} is done`, // Subject line
-		text: `${task_name} for ${app_acronym} has been promoted to the done state by ${promotor}` // plain text body
-		//html: "<b>Hello world?</b>" // html body
-	});
+	try {
+		const info = mailer.sendMail({
+			from: '"TMS" <no-reply.TMS@ethereal.email>', // sender address
+			to: `${email}`, // list of receivers
+			subject: `${task_name} is done`, // Subject line
+			text: `${task_name} for ${app_acronym} has been promoted to the done state by ${promotor}` // plain text body
+			//html: "<b>Hello world?</b>" // html body
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({
+			success: false,
+			message: "Error Sending email, Task set to Done"
+		});
+	}
 }
 
 function getDatetime() {

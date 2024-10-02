@@ -61,6 +61,10 @@ exports.getPlan = async (req, res, next) => {
 		);
 		if (val.length == 0) {
 			console.log("Plan does not exists");
+			res.status(500).json({
+				success: false,
+				message: "Plan does not exists"
+			});
 		}
 		res.status(200).json({
 			success: true,
@@ -68,6 +72,10 @@ exports.getPlan = async (req, res, next) => {
 		});
 	} catch (error) {
 		console.log("error getting the apps");
+		res.status(500).json({
+			success: false,
+			message: "Error getting Plan"
+		});
 	}
 };
 

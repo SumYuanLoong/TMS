@@ -21,7 +21,10 @@ exports.getAllApp = async (req, res, next) => {
 			applist: val
 		});
 	} catch (error) {
-		console.log("error getting the apps");
+		res.status(500).json({
+			success: false,
+			message: "Error getting list of Apps"
+		});
 	}
 };
 
@@ -48,7 +51,10 @@ exports.getApp = async (req, res, next) => {
 			applist: val
 		});
 	} catch (error) {
-		console.log("error getting the apps");
+		res.status(500).json({
+			success: false,
+			message: "Error getting App"
+		});
 	}
 };
 
