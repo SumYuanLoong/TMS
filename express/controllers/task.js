@@ -464,6 +464,9 @@ exports.promoteTask2Done = async (req, res, next) => {
 					task_name = vals[0].task_name;
 					task_app_acronym = vals[0].task_app_acronym;
 				}
+				if (!email) {
+					email = "PL@tms.com";
+				}
 
 				await sendEmail(email, task_name, username, task_app_acronym);
 				res.status(200).json({
@@ -655,10 +658,10 @@ exports.demoteTask2Todo = async (req, res, next) => {
  * @param {*} promotor user that promoted it
  * @param {*} app_acronym
  */
-async function sendEmail(user, task_name, promotor, app_acronym) {
+async function sendEmail(email, task_name, promotor, app_acronym) {
 	const info = mailer.sendMail({
 		from: '"TMS" <no-reply.TMS@ethereal.email>', // sender address
-		to: `${user}@ethereal.email`, // list of receivers
+		to: `${email}`, // list of receivers
 		subject: `${task_name} is done`, // Subject line
 		text: `${task_name} for ${app_acronym} has been promoted to the done state by ${promotor}` // plain text body
 		//html: "<b>Hello world?</b>" // html body
@@ -702,12 +705,12 @@ async function updateTaskNotes(
 	} else if (notes) {
 		newNotes += `has added the notes: \n${notes}\n`;
 	}
-	newNotes += `######################################\n\n`;
+	newNotes += `\n######################################\n`;
 
 	try {
 		let [val] = await pool.execute(
-			"update task set Task_notes = CONCAT(?, Task_notes) where task_id = ?",
-			[newNotes, task_id]
+			"update task set Task_notes = CONCAT(?, Task_notes),task_owner = ? where task_id = ?",
+			[newNotes, username, task_id]
 		);
 		return true;
 	} catch (error) {

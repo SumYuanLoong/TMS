@@ -162,10 +162,10 @@ exports.createApp = async (req, res, next) => {
 		});
 	}
 
-	if (!Number.isInteger(R_number)) {
+	if (!Number.isInteger(R_number) || R_number < 0) {
 		return res.status(400).json({
 			success: false,
-			message: "R_number provided is not a valid whole number"
+			message: "R_number provided must be positive and an integer"
 		});
 	}
 

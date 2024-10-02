@@ -164,13 +164,13 @@ exports.createPlan = async (req, res, next) => {
 	 * colour?
 	 */
 	// date validation
-	if (!isValidDate(startDate) || !isValidDate(endDate)) {
+	if (!isValidDate(plan_startDate) || !isValidDate(plan_endDate)) {
 		//fail
 		return res.status(400).json({
 			success: false,
 			message: "Date values provide are invalid"
 		});
-	} else if (isDateAfter(startDate, endDate)) {
+	} else if (isDateAfter(plan_startDate, plan_endDate)) {
 		//fail
 		return res.status(400).json({
 			success: false,
@@ -219,6 +219,8 @@ exports.createPlan = async (req, res, next) => {
 				success: false,
 				message: "Invalid colour code"
 			});
+		} else {
+			colour = colour.substring(1);
 		}
 	}
 
