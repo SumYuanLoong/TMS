@@ -60,7 +60,6 @@
 	});
 
 	async function saveClick() {
-		console.log('save');
 		if (planChange || notesChange) {
 			if (planChange) {
 				dispatch('updatePlan', {
@@ -73,6 +72,7 @@
 					task_id: taskID,
 					newNotes
 				});
+				newNotes = '';
 			}
 		} else {
 			dialog.close();
@@ -97,11 +97,11 @@
 				app_acronym
 			});
 		}
-		console.log(res1);
 		if (res1.data?.success) {
 			invalidate('app:kanban');
 			//toaster
 			dialog.close();
+			showTaskModal = false;
 		} else {
 			console.log(res1.data.response.message);
 		}
@@ -133,11 +133,11 @@
 				app_acronym
 			});
 		}
-		console.log(res1);
 		if (res1.data?.success) {
 			invalidate('app:kanban');
 			//toaster
 			dialog.close();
+			showTaskModal = false;
 		} else {
 			console.log(res1.data.response.message);
 		}
@@ -148,12 +148,13 @@
 <dialog
 	bind:this={dialog}
 	on:close={() => {
-		showTaskModal = false;
 		errorState = false;
 		planChange = false;
 		notesChange = false;
 		onlyReject = false;
 		demoteVisible = false;
+		invalidate('app:kanban');
+		showTaskModal = false;
 	}}
 	on:click|self={() => dialog.close()}
 >
@@ -210,7 +211,10 @@
 				</div>
 				<div class="right_side">
 					<label for="new group name">Notes:</label> <br />
-					<p class="notes" style="white-space: pre; max-height: 20em; overflow: scroll;">
+					<p
+						class="notes"
+						style="white-space: pre; max-height: 20em; overflow: scroll; max-width:32em"
+					>
 						{taskNotes}
 					</p>
 					<textarea
@@ -328,10 +332,15 @@
 	}
 	.right_side,
 	.left_side {
-		flex: 1;
 		display: flex; /* For vertical alignment within each div */
 		flex-direction: column;
 		margin: 1em;
+	}
+	.left_side {
+		flex: 3;
+	}
+	.right_side {
+		flex: 4;
 	}
 	.bottom_container {
 		flex: 1;

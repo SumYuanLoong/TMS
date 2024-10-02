@@ -28,12 +28,8 @@ router.put(
 );
 
 //Plans
-router.post(
-	"/plans/all",
-	auth.verifyToken,
-	auth.authorizedForRoles("PM", "PL"),
-	planC.getAllPlan
-);
+router.post("/plans/all", auth.verifyToken, planC.getAllPlan);
+router.post("/plans/getOne", auth.verifyToken, planC.getPlan);
 router.post(
 	"/plans/create",
 	auth.verifyToken,

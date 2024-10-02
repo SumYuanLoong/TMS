@@ -20,10 +20,10 @@
 			taskNotes: taskNotes,
 			taskDesc: taskDesc
 		});
-		//planName = [];
-		//taskDesc = '';
-		//taskNotes = '';
-		//taskName = '';
+		planName = [];
+		taskDesc = '';
+		taskNotes = '';
+		taskName = '';
 	}
 </script>
 
@@ -39,7 +39,7 @@
 		<form on:submit|preventDefault={btnClick}>
 			<div>
 				<label for="Task Name">Name:</label> <br />
-				<input type="text" placeholder="Group name" style="width: 100%;" bind:value={taskName} />
+				<input type="text" placeholder="Task name" style="width: 100%;" bind:value={taskName} />
 			</div>
 			<div>
 				<label for="Task Desc">Description</label> <br />

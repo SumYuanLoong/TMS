@@ -15,11 +15,13 @@
 	export let data;
 	$: tasks = data.tasks;
 	$: plans = data.plans;
-	let plan_names = [];
+	$: plan_names = [];
 	$: isPM = data.isPM;
 	$: permissions = data.permissions;
 
 	let taskData = {};
+	let planData = {};
+	$: editMode = false;
 	let flagPlan = false;
 	let flagNone = true;
 	let flagNotes = false;
@@ -65,7 +67,6 @@
 
 	//handle additions
 	async function newPlan(event) {
-		console.log(event.detail);
 		try {
 			let res = await axios.post('/tms/plans/create', {
 				plan_name: event.detail.planName,
@@ -78,8 +79,8 @@
 				plans = [
 					...plans,
 					{
-						plan_MVP_name: event.detail.planName,
-						plan_colour: event.detail.color
+						Plan_MVP_name: event.detail.planName,
+						plan_colour: event.detail.color.substring(1)
 					}
 				];
 			}
@@ -88,7 +89,43 @@
 		}
 	}
 
-	async function updatePlan(params) {}
+	async function startUpdatePlan(plan) {
+		console.log(plan);
+		try {
+			let res = await axios.post('/tms/plans/getOne', {
+				plan_app_acronym: $app_name,
+				plan_name: plan.Plan_MVP_name
+			});
+			if (res.data.success) {
+				console.log(res);
+				planData = res.data.plan;
+				editMode = true;
+				planData.plan_startDate = dateFormating(res.data.plan.plan_startDate);
+				planData.plan_endDate = dateFormating(res.data.plan.plan_endDate);
+				showPlanModal = true;
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
+	async function updatePlan(event) {
+		console.log(event.detail);
+		try {
+			let res = await axios.put('/tms/plans/update', {
+				plan_name: event.detail.planName,
+				plan_app_acronym: $app_name,
+				plan_startDate: event.detail.startDate,
+				plan_endDate: event.detail.endDate,
+				colour: event.detail.color
+			});
+			if (res.data.success) {
+				invalidate('app:kanban');
+			}
+		} catch (error) {
+			console.log(error.response.data);
+		}
+	}
 
 	async function newTask(event) {
 		console.log(event.detail);
@@ -152,6 +189,7 @@
 				viewTask(event.detail.task_id);
 			}
 		} catch (error) {
+			invalidate('app:kanban');
 			//toaster
 			console.log(error);
 		}
@@ -168,9 +206,22 @@
 				viewTask(event.detail.task_id);
 			}
 		} catch (error) {
+			invalidate('app:kanban');
 			//toaster
 			console.log(error);
 		}
+	}
+
+	function dateFormating(date) {
+		const parts = date.split('-');
+		const dd = parts[0];
+		const mm = parts[1];
+		const yyyy = parts[2];
+		const formattedDate = `${yyyy}-${mm}-${dd}`;
+		return formattedDate;
+	}
+	function closePlan() {
+		editMode = false;
 	}
 </script>
 
@@ -195,8 +246,18 @@
 >
 	<h2 slot="header">Task Detail</h2>
 </TaskModal>
-<PlanModal bind:showPlanModal on:newPlan={newPlan}>
-	<h2 slot="header">Create Plan</h2>
+<PlanModal
+	bind:showPlanModal
+	on:newPlan={newPlan}
+	on:closePlan={closePlan}
+	on:updatePlan={updatePlan}
+	{editMode}
+	color="#{planData.plan_colour}"
+	planName={planData.Plan_MVP_name}
+	startDate={planData.plan_startDate}
+	endDate={planData.plan_endDate}
+>
+	<h2 slot="header">{editMode ? 'Update Plan' : 'Create Plan'}</h2>
 </PlanModal>
 <CreateTaskModal bind:showCreateModal on:newTask={newTask} plans={plan_names}>
 	<h2 slot="header">Create New Task</h2>
@@ -207,7 +268,16 @@
 		<button on:click={() => (showCreateModal = true)} style="margin:10px">Create Task</button>{/if}
 	{#if isPM}
 		<button on:click={() => (showPlanModal = true)} style="margin:10px">Create Plan</button>
-		<button on:click={print} style="margin:10px">Plan</button>{/if}
+		<div class="dropdown-container">
+			<button disabled style="margin:10px" class="">Plan</button>
+			<div class="dropdown-content">
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				{#each plans as plan}
+					<a on:click={() => startUpdatePlan(plan)}>{plan.Plan_MVP_name}</a>
+				{/each}
+			</div>
+		</div>
+	{/if}
 </div>
 <div class="board">
 	{#each Object.entries(columns) as [state, tasks]}
@@ -254,5 +324,32 @@
 		margin: 10px;
 		padding: 10px;
 		box-shadow: 3px 3px 3px lightblue;
+	}
+	.dropdown-container:hover .dropdown-content {
+		display: block;
+		background-color: aliceblue;
+		border: 1px;
+		border-color: black;
+	}
+	.dropdown-container:hover .dropdown-content a {
+		border-width: 1px;
+		border-color: black;
+	}
+
+	a:hover {
+		background-color: aquamarine;
+	}
+	.dropdown-content {
+		display: none;
+		position: absolute;
+		right: 0;
+		z-index: 1;
+		min-width: 160px;
+	}
+	.dropdown-content a {
+		color: black;
+		padding: 12px 16px;
+		text-decoration: none;
+		display: block;
 	}
 </style>

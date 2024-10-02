@@ -24,7 +24,6 @@ export const load = async ({ depends }) => {
 		}
 		if (res2.data.authorised) {
 			groups = [];
-			console.log('trying to get group');
 			let res3 = await axios.get('/groups/getAll');
 			if (res3.data.success) {
 				res3.data.grouplist.forEach((element) => {

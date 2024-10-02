@@ -4,10 +4,11 @@
 	const dispatch = createEventDispatcher();
 
 	let dialog; // HTMLDialogElement
-	let planName = '';
-	let startDate = '';
-	let endDate = '';
-	let color = '107c0e';
+	export let planName = '';
+	export let startDate = '';
+	export let endDate = '';
+	export let editMode = false;
+	export let color = '';
 
 	$: if (dialog && showPlanModal) dialog.showModal();
 
@@ -30,14 +31,32 @@
 		planName = '';
 		startDate = '';
 		endDate = '';
-		color = '107c0e';
+		dialog.close();
+	}
+	function updateClick() {
+		//do data validation here
+
+		dispatch('updatePlan', {
+			planName: planName,
+			startDate: convertDateFormat(startDate),
+			endDate: convertDateFormat(endDate),
+			color
+		});
+		planName = '';
+		startDate = '';
+		endDate = '';
+		dialog.close();
 	}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
-	on:close={() => (showPlanModal = false)}
+	on:close={() => {
+		showPlanModal = false;
+		color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+		dispatch('closePlan');
+	}}
 	on:click|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -46,7 +65,13 @@
 		<form>
 			<div>
 				<label for="new group name">Name:</label>
-				<input type="text" placeholder="Plan Name" style="width: 60%;" bind:value={planName} />
+				<input
+					type="text"
+					placeholder="Plan Name"
+					style="width: 60%;"
+					bind:value={planName}
+					disabled={editMode}
+				/>
 			</div>
 			<div>
 				<label for="new group name">Start Date:</label>
@@ -61,7 +86,9 @@
 				<input type="color" bind:value={color} on:change={print} class="colour_pick" />
 			</div>
 
-			<button on:click|preventDefault={btnClick} class="submitBtn">Create Plan</button>
+			<button on:click|preventDefault={editMode ? updateClick : btnClick} class="submitBtn"
+				>{editMode ? 'Update Plan' : 'Create Plan'}</button
+			>
 			<button on:click={() => dialog.close()}>Close</button>
 		</form>
 		<!-- svelte-ignore a11y-autofocus -->

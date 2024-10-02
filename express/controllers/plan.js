@@ -57,7 +57,7 @@ exports.getPlan = async (req, res, next) => {
 	try {
 		let [val] = await pool.query(
 			"select Plan_MVP_name, plan_colour, plan_app_acronym, plan_startDate, plan_endDate from plan where Plan_MVP_name = ? and Plan_app_acronym = ?",
-			[something, somethingElse]
+			[plan_name, plan_app_acronym]
 		);
 		if (val.length == 0) {
 			console.log("Plan does not exists");
@@ -79,7 +79,8 @@ exports.getPlan = async (req, res, next) => {
  * @param {*} next
  */
 exports.updatePlan = async (req, res, next) => {
-	let { plan_name, plan_startDate, plan_endDate, colour } = req.body;
+	let { plan_name, plan_startDate, plan_endDate, colour, plan_app_acronym } =
+		req.body;
 
 	if (
 		!plan_name ||
@@ -95,25 +96,36 @@ exports.updatePlan = async (req, res, next) => {
 	}
 
 	// date validation
-	if (!isValidDate(startDate) || !isValidDate(endDate)) {
+	if (!isValidDate(plan_startDate) || !isValidDate(plan_endDate)) {
 		//fail
 		return res.status(400).json({
 			success: false,
 			message: "Date values provide are invalid"
 		});
-	} else if (isDateAfter(startDate, endDate)) {
+	} else if (isDateAfter(plan_startDate, plan_endDate)) {
 		//fail
 		return res.status(400).json({
 			success: false,
 			message: "Start Date after end date"
 		});
 	}
-
+	if (colour) {
+		//check for 6 characters only hexadec
+		const hexColorRegex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+		if (!hexColorRegex.test(colour)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid colour code"
+			});
+		} else {
+			colour = colour.substring(1);
+		}
+	}
 	//Check if plan exists
 	try {
 		let [val] = await pool.execute(
-			"select exists(select 1 from plan where plan_MVP_name = ?) as plan_exists",
-			[plan_name]
+			"select exists(select 1 from plan where plan_MVP_name = ? and Plan_app_Acronym = ?) as plan_exists",
+			[plan_name, plan_app_acronym]
 		);
 		if (val[0].plan_exists) {
 			//app exists
@@ -129,11 +141,13 @@ exports.updatePlan = async (req, res, next) => {
 
 	try {
 		let [val] = await pool.execute(
-			"update plan set plan_startDate = ?, plan_endDate = ?, plan_colour = ? where plan_MVP_name = ? ",
-			[plan_name]
+			"update plan set plan_startDate = ?, plan_endDate = ?, plan_colour = ? where plan_MVP_name = ? and Plan_app_Acronym = ?",
+			[plan_startDate, plan_endDate, colour, plan_name, plan_app_acronym]
 		);
-		if (val[0].plan_exists) {
-			//app exists
+		if (val) {
+			res.status(200).json({
+				success: true
+			});
 		}
 	} catch (error) {
 		res.status(500).json({

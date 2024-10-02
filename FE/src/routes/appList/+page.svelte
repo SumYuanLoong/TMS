@@ -32,7 +32,6 @@
 				app_acronym: id
 			});
 			if (res.data.success) {
-				console.log(res.data);
 
 				showEModel = true;
 				editMode = true;
