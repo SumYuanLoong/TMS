@@ -59,6 +59,7 @@
 					<div class="dropdown-content">
 						<a href="/userProfile">User Profile</a>
 						{#if isAdmin}<a href="/userManagement">User Management</a>{/if}
+						<a href="/appList">AppList</a>
 						<a href="/logout">Logout</a>
 					</div>
 				</div>
