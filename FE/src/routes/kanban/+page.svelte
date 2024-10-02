@@ -125,6 +125,8 @@
 					flagNotes = true;
 					if (taskData.Task_state == 'Done' || taskData.Task_state == 'Open') {
 						flagPlan = true;
+					} else {
+						flagPlan = false;
 					}
 				} else {
 					flagNone = true;
@@ -246,6 +248,7 @@
 		cursor: pointer;
 	}
 	.task-card {
+		border-radius: 0.7em;
 		border-left: 5px solid transparent; /* Ensures that the border always exists */
 		background-color: white;
 		margin: 10px;

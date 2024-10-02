@@ -41,42 +41,60 @@
 	on:click|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div on:click|stopPropagation>
+	<div on:click|stopPropagation class="container">
 		<slot name="header" />
-		<form on:submit|preventDefault={btnClick}>
+		<form>
 			<div>
-				<label for="new group name">Name:</label> <br />
-				<input type="text" placeholder="Plan Name" style="width: 100%;" bind:value={planName} />
+				<label for="new group name">Name:</label>
+				<input type="text" placeholder="Plan Name" style="width: 60%;" bind:value={planName} />
 			</div>
 			<div>
-				<label for="new group name">Start Date:</label> <br />
+				<label for="new group name">Start Date:</label>
 				<input type="date" bind:value={startDate} />
 			</div>
 			<div>
-				<label for="new group name">End Date:</label> <br />
+				<label for="new group name">End Date:</label>
 				<input type="date" bind:value={endDate} />
 			</div>
 			<div>
-				<label for="colourPicker">Colour</label> <br />
-				<input type="color" bind:value={color} on:change={print} />
+				<label for="colourPicker">Colour</label>
+				<input type="color" bind:value={color} on:change={print} class="colour_pick" />
 			</div>
 
-			<button class="submitBtn" type="submit">Create Plan</button>
+			<button on:click|preventDefault={btnClick} class="submitBtn">Create Plan</button>
+			<button on:click={() => dialog.close()}>Close</button>
 		</form>
 		<!-- svelte-ignore a11y-autofocus -->
-		<button on:click={() => dialog.close()}>Close</button>
 	</div>
 </dialog>
 
 <style>
+	div {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+	}
+	.container {
+		display: block;
+	}
+	input,
+	label {
+		margin: 0.5em;
+		display: inline;
+		height: 2em;
+	}
+	input {
+		border-radius: 0.2em;
+		border-style: solid;
+		border-width: 1px;
+	}
 	dialog {
-		max-width: 36em;
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 800px;
-		height: 300px;
+		width: 36em;
+		height: 24em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
@@ -106,10 +124,9 @@
 			opacity: 1;
 		}
 	}
+
 	button {
-		display: block;
-	}
-	button {
+		display: inline;
 		background-color: white;
 		color: black;
 		border-color: #0056b3;
@@ -119,6 +136,10 @@
 		cursor: pointer;
 		margin: 5px;
 		border-radius: 5px;
+	}
+	.colour_pick {
+		height: 4em;
+		width: 4em;
 	}
 	.submitBtn {
 		background-color: #007bff;

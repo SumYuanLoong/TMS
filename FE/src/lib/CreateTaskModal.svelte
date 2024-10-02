@@ -34,7 +34,7 @@
 	on:click|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div on:click|stopPropagation>
+	<div on:click|stopPropagation class="container">
 		<slot name="header" />
 		<form on:submit|preventDefault={btnClick}>
 			<div>
@@ -43,7 +43,7 @@
 			</div>
 			<div>
 				<label for="Task Desc">Description</label> <br />
-				<textarea bind:value={taskDesc} maxlength="255" />
+				<textarea bind:value={taskDesc} maxlength="255" rows="6" />
 			</div>
 			<div>
 				<label for="Task is of Plan">Plan</label> <br />
@@ -51,7 +51,7 @@
 			</div>
 			<div>
 				<label for="Task Notes">Notes</label> <br />
-				<textarea bind:value={taskNotes} />
+				<textarea bind:value={taskNotes} rows="6" />
 			</div>
 
 			<button class="submitBtn" type="submit">Create Task</button>
@@ -62,14 +62,33 @@
 </dialog>
 
 <style>
+	div {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+	}
+	.container {
+		display: block;
+	}
+	input,
+	label {
+		margin: 0.5em;
+		display: inline;
+		height: 2em;
+	}
+	input {
+		border-radius: 0.2em;
+		border-style: solid;
+		border-width: 1px;
+	}
 	dialog {
 		max-width: 36em;
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 800px;
-		height: 300px;
+		width: 36em;
+		height: 36em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
@@ -109,7 +128,6 @@
 	/* Label and input styles */
 	label {
 		display: inline-block;
-		width: 100%;
 	}
 
 	input,

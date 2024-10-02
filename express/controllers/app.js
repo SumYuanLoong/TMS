@@ -163,7 +163,6 @@ exports.createApp = async (req, res, next) => {
 	}
 
 	if (!Number.isInteger(R_number)) {
-		console.log();
 		return res.status(400).json({
 			success: false,
 			message: "R_number provided is not a valid whole number"

@@ -158,7 +158,7 @@ exports.createTask = async (req, res, next) => {
 
 	let task_notes = `${username} has created task ${task_name} at ${formattedDatetime}. \n Task is now open. \n`;
 	if (input_task_notes) {
-		task_notes = task_notes + "Created with notes: " + input_task_notes;
+		task_notes = task_notes + "Created with notes: \n" + input_task_notes;
 	}
 
 	pool.query("START transaction");

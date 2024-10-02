@@ -134,7 +134,7 @@
 		{/if}
 		<form on:submit|preventDefault={editMode ? editClick : btnClick}>
 			<div>
-				<label for="new group name">Acronym:</label> <br />
+				<label for="Acronym">Acronym:</label> <br />
 				<input
 					type="text"
 					placeholder="App Acronym"
@@ -145,11 +145,17 @@
 				/>
 			</div>
 			<div>
-				<label for="new group name"> Description:</label> <br />
-				<input type="text" placeholder="App Desc" style="width: 100%;" bind:value={description} />
+				<label for="Description"> Description:</label> <br />
+				<textarea
+					maxlength="255"
+					placeholder="App Desc"
+					style="width: 100%;"
+					bind:value={description}
+					rows="6"
+				/>
 			</div>
 			<div>
-				<label for="new group name">R Number:</label> <br />
+				<label for="R number">R Number:</label> <br />
 				<input
 					type="number"
 					placeholder="0"
@@ -159,7 +165,7 @@
 					required
 				/>
 			</div>
-			<div>
+			<div class="dates">
 				<label for="new group name">Start Date:</label> <br />
 				<input
 					type="date"
@@ -179,9 +185,10 @@
 					required
 				/>
 			</div>
-			<div>
-				<label for="colourPicker">Permit Group</label> <br />
-				<div>
+
+			<label for="Groups">Permit Groups</label> <br />
+			<div class="group_container">
+				<div class="group_left">
 					<!-- CREATE-->
 					<div>
 						<label for="create">Create:</label>
@@ -212,6 +219,8 @@
 							{/each}
 						</select>
 					</div>
+				</div>
+				<div class="group_right">
 					<!-- DOING-->
 					<div>
 						<label for="create">Doing:</label>
@@ -239,10 +248,9 @@
 				>{#if editMode}
 					Update
 				{:else}Create App{/if}</button
-			>
+			><button on:click={() => dialog.close()}>Close</button>
 		</form>
 		<!-- svelte-ignore a11y-autofocus -->
-		<button on:click={() => dialog.close()}>Close</button>
 	</div>
 </dialog>
 
@@ -253,8 +261,8 @@
 		border: none;
 		padding: 0;
 		border-radius: 15px;
-		width: 1200px;
-		height: 36em;
+		width: 36em;
+		height: 38em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
@@ -297,6 +305,7 @@
 		cursor: pointer;
 		margin: 5px;
 		border-radius: 5px;
+		display: inline;
 	}
 	.submitBtn {
 		background-color: #007bff;
@@ -306,5 +315,32 @@
 	.error {
 		color: white;
 		background-color: red;
+	}
+	.dates {
+		margin: 1em 0em;
+		display: flex;
+		flex-direction: row;
+	}
+	.dates > input {
+		margin: 0em 1em;
+	}
+	.group_container {
+		display: flex;
+		flex-direction: row;
+		padding: 1em;
+		width: 24em;
+	}
+	.group_left > div > select,
+	.group_right > div > select {
+		margin: 0.7em;
+	}
+	select {
+		background-color: lightgrey;
+		border-radius: 5px;
+		height: 2em;
+		width: 8em;
+	}
+	input {
+		padding: 5px 5px;
 	}
 </style>

@@ -210,11 +210,12 @@
 				</div>
 				<div class="right_side">
 					<label for="new group name">Notes:</label> <br />
-					<p class="notes" style="white-space: pre; max-height: 25em; overflow: scroll;">
+					<p class="notes" style="white-space: pre; max-height: 20em; overflow: scroll;">
 						{taskNotes}
 					</p>
 					<textarea
 						style="width: 100%;"
+						rows="6"
 						bind:value={newNotes}
 						disabled={!flagNotes || flagNone}
 						on:change={() => (notesChange = true)}
@@ -337,5 +338,11 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+	}
+	select {
+		background-color: lightgrey;
+		border-radius: 5px;
+		height: 2em;
+		width: 8em;
 	}
 </style>
