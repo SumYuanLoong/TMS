@@ -3,8 +3,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+var taskRouter = require("./routes/task");
 
 var app = express();
 
@@ -12,5 +11,9 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+app.use("/tasks", taskRouter);
+
+console.log("app has started up");
 
 module.exports = app;
