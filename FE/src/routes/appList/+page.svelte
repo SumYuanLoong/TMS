@@ -104,7 +104,10 @@
 		{#each apps as app, index}
 			<div class="app-card">
 				<h2>{app.app_acronym}</h2>
-				<p>{app.app_description}</p>
+				<textarea
+					style="white-space: pre-wrap; height:5em; width: 40em; max-width:40em; overflow-wrap: break-word; border:none; resize:none;"
+					>{app.app_description}</textarea
+				>
 				<p>R number: {app.app_Rnumber}</p>
 				<button on:click={() => navigate(app.app_acronym)}>View</button>
 				{#if PL}<button on:click={() => startEdit(app.app_acronym)} class="editBtn">Edit</button

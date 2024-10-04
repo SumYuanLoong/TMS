@@ -107,6 +107,7 @@
 				showTaskModal = false;
 			} else {
 				console.log(res1.data.response.message);
+				toast.push(taskName + ' Demoted', { duration: 3000 });
 			}
 		} catch (err) {
 			console.error(err.response.data.message);
@@ -147,7 +148,7 @@
 			}
 			if (res1.data?.success) {
 				invalidate('app:kanban');
-				//toaster
+				toast.push(taskName + ' Promoted', { duration: 3000 });
 				dialog.close();
 				showTaskModal = false;
 			} else {
@@ -176,7 +177,7 @@
 		invalidate('app:kanban');
 		showTaskModal = false;
 	}}
-	on:click|self={() => dialog.close()}
+	on:mousedown|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
@@ -196,7 +197,7 @@
 					<div>
 						<label for="new group name">Description:</label> <br />
 						<textarea
-							style="width: 100%;white-space: pre-line;"
+							style="width: 100%;white-space: pre-wrap;"
 							bind:value={taskDescription}
 							rows="6"
 							disabled
@@ -231,12 +232,12 @@
 				</div>
 				<div class="right_side">
 					<label for="new group name">Notes:</label> <br />
-					<p
+					<textarea
+						disabled
 						class="notes"
-						style="white-space: pre; max-height: 20em; overflow: scroll; max-width:32em"
+						style="white-space: pre-wrap; max-height: 20em; height: 300px;overflow: scroll; max-width:44em; width:44em;"
+						>{taskNotes}</textarea
 					>
-						{taskNotes}
-					</p>
 					<textarea
 						style="width: 100%;"
 						rows="6"
@@ -360,7 +361,7 @@
 		flex: 3;
 	}
 	.right_side {
-		flex: 4;
+		flex: 5;
 	}
 	.bottom_container {
 		flex: 1;
@@ -373,5 +374,8 @@
 		border-radius: 5px;
 		height: 2em;
 		width: 8em;
+	}
+	textarea {
+		resize: none;
 	}
 </style>

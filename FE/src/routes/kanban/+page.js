@@ -31,8 +31,8 @@ export const load = async ({ depends }) => {
 			tasks = res1.data.taskList;
 		}
 		tasks.forEach((task) => {
-			if (task.task_description.length > 60) {
-				task.task_description = task.task_description.substring(0, 64) + '....';
+			if (task.task_description.length > 120) {
+				task.task_description = task.task_description.substring(0, 120) + '....';
 			}
 			if (!task.color) {
 				task.color = '000000';

@@ -51,6 +51,7 @@
 			});
 			if (res.data.success) {
 				errorState = false;
+				toast.push(app_name + ' Created', { duration: 3000 });
 				invalidate('app:appList');
 				dialog.close();
 				app_name = '';
@@ -87,6 +88,7 @@
 			});
 			if (res.data.success) {
 				invalidate('app:appList');
+				toast.push(app_name + ' Updated', { duration: 3000 });
 				app_name = '';
 				startDate = '';
 				endDate = '';
@@ -128,7 +130,7 @@
 		rNumber = 1;
 		description = '';
 	}}
-	on:click|self={() => dialog.close()}
+	on:mousedown|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
@@ -136,7 +138,7 @@
 		{#if errorState}
 			<p class="error">{errMsg}</p>
 		{/if}
-		<form on:submit|preventDefault={editMode ? editClick : btnClick}>
+		<form>
 			<div>
 				<label for="Acronym">Acronym:</label> <br />
 				<input
@@ -248,7 +250,7 @@
 				</div>
 			</div>
 
-			<button class="submitBtn" type="submit"
+			<button class="submitBtn" on:click|preventDefault={editMode ? editClick : btnClick}
 				>{#if editMode}
 					Update
 				{:else}Create App{/if}</button
@@ -266,7 +268,7 @@
 		padding: 0;
 		border-radius: 15px;
 		width: 36em;
-		height: 38em;
+		height: 39em;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
@@ -346,5 +348,8 @@
 	}
 	input {
 		padding: 5px 5px;
+	}
+	textarea {
+		resize: none;
 	}
 </style>

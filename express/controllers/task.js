@@ -710,7 +710,7 @@ async function updateTaskNotes(
 	if (task_plan) {
 		newNotes += `has changed the plan to ${task_plan}\n`;
 	} else if (task_state) {
-		newNotes += `has ${action} to ${task_state}\n`;
+		newNotes += `has ${action} task to ${task_state}\n`;
 	} else if (notes) {
 		newNotes += `has added the notes: \n${notes}\n`;
 	}

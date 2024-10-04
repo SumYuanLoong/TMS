@@ -84,6 +84,7 @@
 						plan_colour: event.detail.color.substring(1)
 					}
 				];
+				toast.push(event.detail.planName + ' Created', { duration: 3000 });
 			}
 		} catch (error) {
 			console.log(error.response.data);
@@ -129,6 +130,7 @@
 				colour: event.detail.color
 			});
 			if (res.data.success) {
+				toast.push(event.detail.planName + ' Updated', { duration: 3000 });
 				invalidate('app:kanban');
 			}
 		} catch (error) {
@@ -153,6 +155,7 @@
 			if (res.data.success) {
 				console.log('new task');
 				tasks = [];
+				toast.push(event.detail.taskName + ' Created', { duration: 3000 });
 				invalidate('app:kanban');
 			}
 		} catch (error) {
@@ -205,6 +208,7 @@
 			});
 			if (res.data.success) {
 				viewTask(event.detail.task_id);
+				toast.push(event.detail.task_id + ' Plan Updated', { duration: 3000 });
 			}
 		} catch (error) {
 			invalidate('app:kanban');
@@ -222,6 +226,7 @@
 			});
 			if (res.data.success) {
 				viewTask(event.detail.task_id);
+				toast.push(event.detail.task_id + ' Notes Updated', { duration: 3000 });
 			}
 		} catch (error) {
 			invalidate('app:kanban');

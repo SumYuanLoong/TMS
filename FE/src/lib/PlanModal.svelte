@@ -10,9 +10,12 @@
 	export let startDate = '';
 	export let endDate = '';
 	export let editMode = false;
-	export let color = '';
+	export let color = '#' + Math.floor(Math.random() * 16777215).toString(16);
 
-	$: if (dialog && showPlanModal) dialog.showModal();
+	$: {
+		if (dialog && showPlanModal) dialog.showModal();
+		color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+	}
 
 	function convertDateFormat(dateString) {
 		const [year, month, day] = dateString.split('-');
@@ -65,7 +68,7 @@
 		color = '#' + Math.floor(Math.random() * 16777215).toString(16);
 		dispatch('closePlan');
 	}}
-	on:click|self={() => dialog.close()}
+	on:mousedown|self={() => dialog.close()}
 >
 	{#if errorState}
 		<p class="error">{errMsg}</p>
@@ -98,7 +101,7 @@
 			</div>
 
 			<button on:click|preventDefault={editMode ? updateClick : btnClick} class="submitBtn"
-				>{editMode ? 'Update Plan' : 'Create Plan'}</button
+				>{editMode ? 'Save' : 'Create Plan'}</button
 			>
 			<button on:click={() => dialog.close()}>Close</button>
 		</form>

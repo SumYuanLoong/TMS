@@ -31,7 +31,7 @@
 <dialog
 	bind:this={dialog}
 	on:close={() => (showCreateModal = false)}
-	on:click|self={() => dialog.close()}
+	on:mousedown|self={() => dialog.close()}
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation class="container">
@@ -53,10 +53,11 @@
 				<label for="Task Notes">Notes</label> <br />
 				<textarea bind:value={taskNotes} rows="6" />
 			</div>
-
-			<button class="submitBtn" type="submit">Create Task</button>
 		</form>
-		<!-- svelte-ignore a11y-autofocus -->
+		<!-- svelte-ignore a11y-autofocus --><button
+			class="submitBtn"
+			on:click|preventDefault={btnClick}>Create Task</button
+		>
 		<button on:click={() => dialog.close()} class="close">Close</button>
 	</div>
 </dialog>

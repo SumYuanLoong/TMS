@@ -177,7 +177,7 @@ exports.createPlan = async (req, res, next) => {
 
 	console.log(req.body);
 	if (!plan_name || !plan_app_acronym || !plan_startDate || !plan_endDate) {
-		res.status(400).json({
+		return res.status(400).json({
 			success: false,
 			message: "Required fields are missing"
 		});
