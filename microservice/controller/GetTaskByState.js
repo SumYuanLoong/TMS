@@ -1,3 +1,37 @@
+/** Login
+ * Issue a jwt if user credentials are valid
+ * @param {string} username
+ * @param {string} password
+ */
+async function login(req, res, next) {
+	let { username, password } = req.body;
+
+	//INPUT VALIDATION
+	if (!username && !password) {
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+
+	try {
+		var [val] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
+		}
+	} catch (error) {
+		//console.error(error);
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+	//password matching and check user disabled
+	let matcha = await bcryt.compare(password, val[0].password);
+	if (!matcha || !val[0].active) {
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+
+	return true;
+}
+
 /**
  * Gets all task of the Specific app
  * @param {*} req

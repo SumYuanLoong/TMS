@@ -1,3 +1,113 @@
+/** Login
+ * Issue a jwt if user credentials are valid
+ * @param {string} username
+ * @param {string} password
+ */
+exports.login = async (req, res, next) => {
+	let { username, password } = req.body;
+
+	//INPUT VALIDATION
+	if (!username && !password) {
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+
+	try {
+		var [val] = await pool.execute(
+			`Select * from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return next(new ErrorObj("Invalid Credentials", 401, ""));
+		}
+	} catch (error) {
+		//console.error(error);
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+	//password matching and check user disabled
+	let matcha = await bcryt.compare(password, val[0].password);
+	if (!matcha || !val[0].active) {
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+
+	res.status(200).cookie("token", token, options).json({
+		success: true
+	});
+};
+
+/**
+ * This is used for routes that are task related
+ * Pre-requisite: Use verifyToken on route
+ * @param  {}
+ * @returns
+ */
+exports.authorisedForTasks = async (req, res, next) => {
+	let token = req.cookies.token;
+	let decoded = jwt.verify(token, process.env.JWT_secret);
+	let username = decoded.username;
+	let state = "";
+	let role = "";
+
+	let { task_id, app_acronym } = req.body;
+	if (task_id) {
+		try {
+			let [val] = await pool.execute(
+				`select task_state from task where task_id = ?`,
+				[task_id]
+			);
+			state = val[0].task_state;
+		} catch (error) {
+			return next(new ErrorObj("Cant find task", 401, ""));
+		}
+	} else {
+		state = "Create";
+	}
+
+	let query = `select app_permit_${state} from Application where app_acronym = ?`;
+	try {
+		let [val] = await pool.execute(query, [app_acronym]);
+		const prop = "app_permit_" + state;
+		role = val[0][prop];
+	} catch (error) {
+		return next(new ErrorObj("Error Getting Permissions", 401, ""));
+	}
+
+	if (await checkGroup(username, role)) {
+		next();
+	} else {
+		//fail not in group
+		return next(new ErrorObj("Invalid Credentials", 401, ""));
+	}
+};
+
+/**
+ * Check if the user is in these groups
+ * @param {*} username username of the user preferably from JWT
+ * @param {*} groups list of group_ids permitted to access
+ * @returns
+ */
+async function checkGroup(username, group) {
+	// Group validation
+	try {
+		let statement =
+			"SELECT g.group_name " +
+			"FROM users u " +
+			"JOIN user_group ug ON u.user_name = ug.user_name " +
+			"JOIN group_list g ON ug.group_id = g.group_id " +
+			"WHERE u.user_name = ?";
+		var [val] = await pool.query(statement, [username]);
+	} catch (dberr) {
+		return false;
+	}
+	for (let index = 0; index < val.length; index++) {
+		const element = val[index];
+		if (group.includes(element.group_name)) {
+			return true;
+		}
+	}
+	// if any in val/grp matches any id of the input
+	return false;
+}
+
 exports.promoteTask2Done = async (req, res, next) => {
 	let { task_id, current_state } = req.body;
 
