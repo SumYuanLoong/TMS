@@ -1,82 +1,15 @@
-/** Login
- * Issue a jwt if user credentials are valid
- * @param {string} username
- * @param {string} password
- */
-exports.login = async (req, res, next) => {
-	let { username, password } = req.body;
-
-	//INPUT VALIDATION
-	if (!username && !password) {
-		return next(new ErrorObj("Invalid Credentials", 401, ""));
-	}
-
-	try {
-		var [val] = await pool.execute(
-			`Select * from users where user_name = ?`,
-			[username]
-		);
-		if (val.length == 0) {
-			return next(new ErrorObj("Invalid Credentials", 401, ""));
-		}
-	} catch (error) {
-		//console.error(error);
-		return next(new ErrorObj("Invalid Credentials", 401, ""));
-	}
-	//password matching and check user disabled
-	let matcha = await bcryt.compare(password, val[0].password);
-	if (!matcha || !val[0].active) {
-		return next(new ErrorObj("Invalid Credentials", 401, ""));
-	}
-
-	res.status(200).cookie("token", token, options).json({
-		success: true
-	});
-};
-
-/**
- * This is used for routes that are task related
- * Pre-requisite: Use verifyToken on route
- * @param  {}
- * @returns
- */
-exports.authorisedForTasks = async (req, res, next) => {
-	let token = req.cookies.token;
-	let decoded = jwt.verify(token, process.env.JWT_secret);
-	let username = decoded.username;
-	let state = "";
-	let role = "";
-
-	let { task_id, app_acronym } = req.body;
-	if (task_id) {
-		try {
-			let [val] = await pool.execute(
-				`select task_state from task where task_id = ?`,
-				[task_id]
-			);
-			state = val[0].task_state;
-		} catch (error) {
-			return next(new ErrorObj("Cant find task", 401, ""));
-		}
-	} else {
-		state = "Create";
-	}
-
-	let query = `select app_permit_${state} from Application where app_acronym = ?`;
-	try {
-		let [val] = await pool.execute(query, [app_acronym]);
-		const prop = "app_permit_" + state;
-		role = val[0][prop];
-	} catch (error) {
-		return next(new ErrorObj("Error Getting Permissions", 401, ""));
-	}
-
-	if (await checkGroup(username, role)) {
-		next();
-	} else {
-		//fail not in group
-		return next(new ErrorObj("Invalid Credentials", 401, ""));
-	}
+const code = {
+	auth01: "A001", // invalid username/password
+	auth02: "A002", // deactivated
+	auth03: "A003", // insufficient group permission
+	payload01: "P001", // missing mandatory keys
+	payload02: "P002", // invalid values
+	payload03: "P003", // value out of range
+	payload04: "P004", // task state error
+	transaction01: "T001", // error while carrying out transaction
+	url01: "U001", // url dont match
+	success01: "S001", // success
+	error01: "E001" // general error
 };
 
 /**
@@ -109,12 +42,72 @@ async function checkGroup(username, group) {
 }
 
 exports.promoteTask2Done = async (req, res, next) => {
-	let { task_id, current_state } = req.body;
+	if (req.originalUrl !== "/task/promoteTask2Done") {
+		return res.status(400).json({ code: code.url01 });
+	}
 
-	let token = req.cookies.token;
-	let decoded = await jwt.verify(token, process.env.JWT_secret);
-	let username = decoded.username;
+	const { username, password, task_id } = req.body;
 
+	if (!username && !password && !task_id) {
+		return res.status(401).json({ code: code.payload01 });
+	}
+
+	//Login
+	try {
+		var [val] = await pool.execute(
+			`Select user_name, password, active from users where user_name = ?`,
+			[username]
+		);
+		if (val.length == 0) {
+			return res.status(401).json({ code: code.auth01 });
+		}
+	} catch (error) {
+		//console.error(error);
+		return res.status(401).json({ code: code.auth01 });
+	}
+	let matcha = await bcryt.compare(password, val[0].password);
+	if (!matcha) {
+		return res.status(401).json({ code: code.auth01 });
+	} else if (!val[0].active) {
+		return res.status(401).json({ code: code.auth02 });
+	}
+
+	// get app and therefore app_permit
+	let state = "";
+	let role = "";
+	let app_acronym = "";
+	try {
+		//does task_id exist
+		let [val] = await pool.execute(
+			`select task_state, task_app_acronym from task where task_id = ?`,
+			[task_id]
+		);
+		if (val.length === 0) {
+			return res.status(400).json({ code: code.payload02 });
+		}
+		state = val[0].task_state;
+		app_acronym = val[0].task_app_acronym; //app will exist if task exists
+	} catch (error) {
+		return res.status(401).json({ code: code.transaction01 });
+	}
+
+	let query = `select app_permit_${state} from Application where app_acronym = ?`;
+	try {
+		let [val] = await pool.execute(query, [app_acronym]);
+		const prop = "app_permit_" + state;
+		role = val[0][prop];
+	} catch (error) {
+		return res.status(401).json({ code: code.transaction01 });
+	}
+
+	if (await checkGroup(username, role)) {
+		next();
+	} else {
+		//fail not in group
+		return res.status(401).json({ code: code.auth03 });
+	}
+
+	// promote
 	let email, task_name, task_app_acronym;
 	try {
 		let [check] = await pool.execute(
@@ -123,11 +116,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 			[task_id]
 		);
 		if (!check[0].task_is_doing) {
-			return res.status(400).json({
-				success: false,
-				message:
-					"Task is not in doing state and cannot be promoted to Done"
-			});
+			return res.status(401).json({ code: code.payload04 });
 		}
 
 		let [val] = await pool.execute(
@@ -135,10 +124,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 			[username, task_id]
 		);
 		if (val.affectedRows === 0) {
-			return res.status(500).json({
-				success: false,
-				message: "Task is not updated"
-			});
+			return res.status(401).json({ code: code.transaction01 });
 		} else {
 			if (
 				await updateTaskNotes(
@@ -174,10 +160,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json({
-			success: false,
-			message: "Database Error task not updated"
-		});
+		return res.status(401).json({ code: code.transaction01 });
 	}
 };
 
