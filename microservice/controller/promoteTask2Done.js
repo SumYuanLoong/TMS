@@ -6,10 +6,10 @@ const code = {
 	auth02: "A002", // deactivated
 	auth03: "A003", // insufficient group permission
 	payload01: "P001", // missing mandatory keys
-	payload02: "P002", // invalid values
-	payload03: "P003", // value out of range
-	payload04: "P004", // task state error
-	transaction01: "T001", // error while carrying out transaction
+	transaction01: "T001", // invalid values
+	transaction02: "T002", // value out of range
+	transaction03: "T003", // task state error
+	transaction04: "T004", // error while carrying out transaction
 	url01: "U001", // url dont match
 	success01: "S001", // success
 	error01: "E001" // general error
@@ -91,12 +91,12 @@ exports.promoteTask2Done = async (req, res, next) => {
 			[task_id]
 		);
 		if (val.length === 0) {
-			return res.status(400).json({ code: code.payload02 });
+			return res.status(400).json({ code: code.transaction01 });
 		}
 		state = val[0].task_state;
 		app_acronym = val[0].task_app_acronym; //app will exist if task exists
 	} catch (error) {
-		return res.status(401).json({ code: code.transaction01 });
+		return res.status(401).json({ code: code.transaction04 });
 	}
 
 	let query = `select app_permit_${state} from Application where app_acronym = ?`;
@@ -105,7 +105,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 		const prop = "app_permit_" + state;
 		role = val[0][prop];
 	} catch (error) {
-		return res.status(401).json({ code: code.transaction01 });
+		return res.status(401).json({ code: code.transaction04 });
 	}
 
 	if (!(await checkGroup(username, role))) {
@@ -122,7 +122,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 			[task_id]
 		);
 		if (!check[0].task_is_doing) {
-			return res.status(401).json({ code: code.payload04 });
+			return res.status(401).json({ code: code.transaction03 });
 		}
 
 		let [val] = await pool.execute(
@@ -130,7 +130,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 			[username, task_id]
 		);
 		if (val.affectedRows === 0) {
-			return res.status(401).json({ code: code.transaction01 });
+			return res.status(401).json({ code: code.transaction04 });
 		} else {
 			if (
 				await updateTaskNotes(
@@ -166,7 +166,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(401).json({ code: code.transaction01 });
+		return res.status(401).json({ code: code.transaction04 });
 	}
 };
 

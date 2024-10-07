@@ -6,10 +6,10 @@ const code = {
 	auth02: "A002", // deactivated
 	auth03: "A003", // insufficient group permission
 	payload01: "P001", // missing mandatory keys
-	payload02: "P002", // invalid values
-	payload03: "P003", // value out of range
-	payload04: "P004", // task state error
-	transaction01: "T001", // error while carrying out transaction
+	transaction01: "T001", // invalid values
+	transaction02: "T002", // value out of range
+	transaction03: "T003", // task state error
+	transaction04: "T004", // error while carrying out transaction
 	url01: "U001", // url dont match
 	success01: "S001", // success
 	error01: "E001" // general error
@@ -35,7 +35,7 @@ exports.getTasksByState = async (req, res, next) => {
 	}
 
 	if (!state.includes(task_state)) {
-		return res.status(400).json({ code: code.payload02 });
+		return res.status(400).json({ code: code.transaction02 });
 	} else {
 		task_state = state.indexOf(task_state);
 		task_state = task_state + 1;
@@ -72,7 +72,7 @@ exports.getTasksByState = async (req, res, next) => {
 				[task_appAcronym]
 			);
 			if (app_check.length === 0) {
-				return res.status(400).json({ code: code.payload02 });
+				return res.status(400).json({ code: code.transaction01 });
 			}
 
 			let [val1] = await pool.execute(
@@ -87,7 +87,7 @@ exports.getTasksByState = async (req, res, next) => {
 				data: val1
 			});
 		} catch (error) {
-			return res.status(401).json({ code: code.transaction01 });
+			return res.status(401).json({ code: code.transaction04 });
 		}
 	}
 };

@@ -5,10 +5,10 @@ const code = {
 	auth02: "A002", // deactivated
 	auth03: "A003", // insufficient group permission
 	payload01: "P001", // missing mandatory keys
-	payload02: "P002", // invalid values
-	payload03: "P003", // value out of range
-	payload04: "P004", // task state error
-	transaction01: "T001", // error while carrying out transaction
+	transaction01: "T001", // invalid values
+	transaction02: "T002", // value out of range
+	transaction03: "T003", // task state error
+	transaction04: "T004", // error while carrying out transaction
 	url01: "U001", // url dont match
 	success01: "S001", // success
 	error01: "E001" // general error
@@ -71,16 +71,16 @@ exports.createTask = async (req, res, next) => {
 	}
 
 	if (task_name.length > 64) {
-		return res.status(401).json({ code: code.payload03 });
+		return res.status(401).json({ code: code.transaction02 });
 	}
 	if (password.length > 10) {
 		return res.status(401).json({ code: code.auth01 });
 	}
 	if (task_description?.length > 255) {
-		return res.status(401).json({ code: code.payload03 });
+		return res.status(401).json({ code: code.transaction02 });
 	}
 	if (task_notes?.length > 65535) {
-		return res.status(401).json({ code: code.payload03 });
+		return res.status(401).json({ code: code.transaction02 });
 	}
 	//login
 	try {
@@ -111,12 +111,12 @@ exports.createTask = async (req, res, next) => {
 	try {
 		let [val] = await pool.execute(query, [task_appAcronym]);
 		if (val.length === 0) {
-			return res.status(400).json({ code: code.payload02 });
+			return res.status(400).json({ code: code.transaction01 });
 		}
 		const prop = "app_permit_" + state;
 		role = val[0][prop] || "";
 	} catch (error) {
-		return res.status(401).json({ code: code.transaction01 });
+		return res.status(401).json({ code: code.transaction04 });
 	}
 
 	if (!(await checkGroup(username, role))) {
@@ -130,10 +130,10 @@ exports.createTask = async (req, res, next) => {
 			[task_appAcronym]
 		);
 		if (!val[0].app_exists) {
-			return res.status(400).json({ code: code.payload02 });
+			return res.status(400).json({ code: code.transaction01 });
 		}
 	} catch (err) {
-		return res.status(401).json({ code: code.transaction01 });
+		return res.status(401).json({ code: code.transaction04 });
 	}
 
 	//auto generate date
@@ -156,10 +156,10 @@ exports.createTask = async (req, res, next) => {
 				[task_appAcronym, task_plan]
 			);
 			if (!val[0].plan_exists) {
-				return res.status(400).json({ code: code.payload02 });
+				return res.status(400).json({ code: code.transaction01 });
 			}
 		} catch (error) {
-			return res.status(401).json({ code: code.transaction01 });
+			return res.status(401).json({ code: code.transaction04 });
 		}
 	}
 
@@ -214,7 +214,7 @@ exports.createTask = async (req, res, next) => {
 	} catch (error) {
 		await pool.query("ROLLBACK");
 		if (error.code === "ER_DUP_ENTRY") {
-			return res.status(500).json({ code: code.transaction01 });
+			return res.status(500).json({ code: code.transaction04 });
 		} else {
 			return res.status(500).json({ code: code.error01 });
 		}
