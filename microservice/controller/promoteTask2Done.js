@@ -1,3 +1,6 @@
+const pool = require("../config/db");
+const bcrypt = require("bcryptjs");
+const mailer = require("../config/mailer");
 const code = {
 	auth01: "A001", // invalid username/password
 	auth02: "A002", // deactivated
@@ -42,14 +45,19 @@ async function checkGroup(username, group) {
 }
 
 exports.promoteTask2Done = async (req, res, next) => {
-	if (req.originalUrl !== "/task/promoteTask2Done") {
+	console.log("test2");
+	if (req.originalUrl !== "/api/task/promoteTask2Done") {
 		return res.status(400).json({ code: code.url01 });
 	}
 
 	const { username, password, task_id } = req.body;
 
-	if (!username && !password && !task_id) {
+	if (!username || !password || !task_id) {
 		return res.status(401).json({ code: code.payload01 });
+	}
+
+	if (password.length > 10) {
+		return res.status(401).json({ code: code.auth01 });
 	}
 
 	//Login
@@ -65,7 +73,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 		//console.error(error);
 		return res.status(401).json({ code: code.auth01 });
 	}
-	let matcha = await bcryt.compare(password, val[0].password);
+	let matcha = await bcrypt.compare(password, val[0].password);
 	if (!matcha) {
 		return res.status(401).json({ code: code.auth01 });
 	} else if (!val[0].active) {
@@ -100,9 +108,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 		return res.status(401).json({ code: code.transaction01 });
 	}
 
-	if (await checkGroup(username, role)) {
-		next();
-	} else {
+	if (!(await checkGroup(username, role))) {
 		//fail not in group
 		return res.status(401).json({ code: code.auth03 });
 	}
@@ -132,7 +138,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 					"Done",
 					null,
 					getDatetime(),
-					actions.promote,
+					"promote",
 					null,
 					task_id
 				)
@@ -154,7 +160,7 @@ exports.promoteTask2Done = async (req, res, next) => {
 
 				await sendEmail(email, task_name, username, task_app_acronym);
 				res.status(200).json({
-					success: true
+					success: code.success01
 				});
 			}
 		}

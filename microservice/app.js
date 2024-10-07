@@ -24,14 +24,12 @@ var app = express();
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 
-app.use("/tasks", taskRouter);
+app.use("/api/task", taskRouter);
 
-console.log("app has started up");
-
-app.all("*", (req, res, next) => {
-	res.status(404).json({ code: "U001" });
+app.use((req, res) => {
+	console.log("test1");
+	res.status(408).json({ code: "U001" });
 });
 
 module.exports = app;

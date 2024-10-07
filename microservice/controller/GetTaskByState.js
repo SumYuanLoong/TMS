@@ -1,3 +1,6 @@
+const pool = require("../config/db");
+const bcrypt = require("bcryptjs");
+
 const code = {
 	auth01: "A001", // invalid username/password
 	auth02: "A002", // deactivated
@@ -11,7 +14,7 @@ const code = {
 	success01: "S001", // success
 	error01: "E001" // general error
 };
-const state = ["Open", "Todo", "Doing", "Done", "Closed"];
+const state = ["open", "todo", "doing", "done", "close"];
 /**
  * Gets all task of the Specific app
  * @param {*} req
@@ -19,18 +22,27 @@ const state = ["Open", "Todo", "Doing", "Done", "Closed"];
  * @param {*} next
  */
 exports.getTasksByState = async (req, res, next) => {
-	if (req.originalUrl !== "/task/getTasksByState") {
+	//console.log(req);
+	if (req.originalUrl !== "/api/task/getTaskByState") {
 		return res.status(400).json({ code: code.url01 });
 	}
 
-	const { username, password, task_appAcronym, task_state } = req.body;
+	const { username, password, task_appAcronym } = req.body;
+	let { task_state } = req.body;
 
-	if (!username && !password && !task_appAcronym && !task_state) {
+	if (!username || !password || !task_appAcronym || !task_state) {
 		return res.status(401).json({ code: code.payload01 });
 	}
 
 	if (!state.includes(task_state)) {
 		return res.status(400).json({ code: code.payload02 });
+	} else {
+		task_state = state.indexOf(task_state);
+		task_state = task_state + 1;
+	}
+
+	if (password.length > 10) {
+		return res.status(401).json({ code: code.auth01 });
 	}
 
 	try {
@@ -46,16 +58,16 @@ exports.getTasksByState = async (req, res, next) => {
 		return res.status(401).json({ code: code.auth01 });
 	}
 	//password matching and check user disabled
-	let matcha = await bcryt.compare(password, val[0].password);
+	let matcha = await bcrypt.compare(password, val[0].password);
 	if (!matcha) {
 		return res.status(401).json({ code: code.auth01 });
 	} else if (!val[0].active) {
 		return res.status(401).json({ code: code.auth02 });
 	}
 
-	if (app_name) {
+	if (task_appAcronym) {
 		try {
-			const [app_check] = await db.execute(
+			const [app_check] = await pool.execute(
 				`SELECT app_acronym FROM application WHERE app_acronym = ?`,
 				[task_appAcronym]
 			);
@@ -71,8 +83,8 @@ exports.getTasksByState = async (req, res, next) => {
 			);
 
 			res.status(200).json({
-				success: true,
-				taskList: val1
+				code: code.success01,
+				data: val1
 			});
 		} catch (error) {
 			return res.status(401).json({ code: code.transaction01 });
