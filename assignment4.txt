@@ -1,0 +1,110 @@
+what are the explicit semantics of using put or [patch
+
+this time not so bad for you
+first init axios modules
+create json obj
+this json will be pass to the backend server with infinite length
+once this setup is done, we execute the request call
+
+VM - hypervisor
+container - container engine
+
+VM - Guest OS - app library - running application
+will run windows app that are built using .net core 2.X 
+
+container has a small form factor - spin up fast - scales out fast
+the containers are managed by kubenetes k8s
+scale out needs load balancing
+k8s helps with the load balancing and internal routing and URIs
+	on run the engine will check the local cache before going to the registry
+kubenetes
+- Master nodes each has a Etcd database. 
+- if need HA, the master nodes need to have 3
+Master node will control the 
+	- worker nodes - which contains pods that has the containers
+	- container registry - JfrogArtifacotry, Nexus, Quay
+	- Service Infra node that does the IP mapping
+	- Route Infra node , contains a route table that sends the new users to the correct pods
+	- Storage, ceph and glusterfs
+	- Logging node, fluentD, Kibana, Elastic
+	Therefore 7 VMs to run k8s
+	database should not run in container, as there is a storage access penalty
+	Unless there you run specific worker nodes on flash storage based machines, which increase the cost
+
+3 zones
+Internet
+Docker with local repository
+	- Daemon
+	- workspace
+	- cache
+1. Docker build from the src folder of the project
+ - dockerfile line 1 describes the base image
+ - looks for image in local cache
+ - if not in cache, will pull from the container registry into cache
+ - dockerignore file will define the files to ignore in the build instruction
+	- non root or non-system user with no write privilege 
+ - npm install? expose? -p flag
+ - once the build is complete, the daemon will publish it to the local repository
+2. Docker run <container-name> <image-name>
+ - will get the image from the local repository
+ - load the container into the workspace to run 
+airgap
+DEV ENVIRONMENT
+A. prep dev environment
+	- base image
+		1. pull the image from the registry
+		2. docker save <image-name> > node.tar
+	- node modules required for the application
+		1. copy the package.json - set all dependency = true (the package.json file here is from the dev environment, need approval to take out)
+		2. npm install
+		3. npm pack  > npm.tzip
+	fingerprint the files using sha-256 
+	archive base image and node modules with a password
+	burn archive to dvd
+
+Send the password via different media
+
+1. extract archive 
+2. verify the 2 files from the archive using sha-256
+(special case when there is a jfrogartifactory system in dev environment where it acts as a container registry or node registry)
+Docker load <node.tar> - this will load the image into the local-repo
+There is a git server in the dev environment
+Dockerfile
+	- base image
+	- copy the tzip file into the container
+	- npm install <npm.tzip>
+	- (node_modules)
+		- (npm)
+			-(node_modules)
+				- list of modules downloaded
+			- package.json
+	- compare package.json with src code package.json
+	- continue if match
+	- publish to the dev env local-repo
+B. dev and test
+
+dockersave built container image
+built container image and env file save to dvd and xfer to TEST/PROD
+airgap
+TEST/PROD ENVIRONMENT
+1. docker load (release engineer will update the env file)
+2. docker run 
+C. Deliver and test
+
+1 how docker works
+2 how to build a image
+3 how to build in airgap environment
+	
+Try docker purge
+run 
+build
+load
+
+Agenda
+storyline
+table selection criteria for base image
+base-image name || size || application size || security
+docker console, docker scout will tell you like npm audit
+even with critical and high vul, can use if you are not using those ports/services/nodes
+even vs odd numbers for image
+less than 200MB for each image
