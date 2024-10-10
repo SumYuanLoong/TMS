@@ -181,7 +181,7 @@ exports.createTask = async (req, res, next) => {
 		let Rnum = val1[0].app_rnumber + 1;
 
 		const task_id = task_appAcronym + "_" + Rnum;
-
+		console.log("1");
 		let [val2] = await pool.execute(
 			"insert into task " +
 				"(task_id, task_name, task_description, task_state, task_creator, task_owner, task_createDate, " +
@@ -190,7 +190,7 @@ exports.createTask = async (req, res, next) => {
 			[
 				task_id,
 				task_name,
-				task_description,
+				task_description || null,
 				"Open",
 				username,
 				username,
@@ -200,13 +200,14 @@ exports.createTask = async (req, res, next) => {
 				task_appAcronym
 			]
 		);
+		console.log("2");
 
 		let [val3] = await pool.execute(
 			"Update application set app_Rnumber = ? where app_acronym = ?",
 			[Rnum, task_appAcronym]
 		);
 		await pool.query("COMMIT");
-
+		console.log("3");
 		res.status(200).json({
 			task_id: task_id,
 			code: code.success01
