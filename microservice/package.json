@@ -19,5 +19,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
-  }
+  },
+  "bundleDependencies":["nodemailer", "mysql2"],
+  "bundleDependencies":true
 }
