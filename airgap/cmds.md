@@ -3,6 +3,9 @@ docker image save <imagename> > <filename>.tar - does not work, speculate that t
 docker save -o <filename>.tar <imagename> - will import when exported from windows
 
 npm pack - results in a tgz file based on the app name and version defined in the package.json file
-need to add bundleDependencies = trues
+need to add bundleDependencies = true
 
-docker load
+docker load <image.tar>
+
+LINUX cmds
+sha256sum <file>
