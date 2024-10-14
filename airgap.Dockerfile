@@ -16,14 +16,13 @@ mv ./node_modules ./node_modules_temp && \
 # bring the folder out
 mv ./node_modules_temp/microservice/node_modules . && \
 # delete the temp folder
-rm node_modules_temp -r && \
+rm node_modules_temp -rf && \
 # save 3 mb by not spliting cmds
 addgroup appgroup --gid 1234 && \
-adduser -H -s /sbin/nologin -D -u 1337 -G appgroup service_user && \
-npm i --omit=dev
+adduser -H -s /sbin/nologin -D -u 1337 -G appgroup service_user 
 COPY ./microservice /myapp
 
 USER service_user
 # need to change DB from localhost to host.docker.internal(only for windows, check docs for other host OS)
 EXPOSE 3001
-CMD ["npm", "run","prod"]
+CMD ["node","./bin/www"]
