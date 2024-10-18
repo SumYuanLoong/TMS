@@ -3,3 +3,6 @@
 */static
 */public
 microservice/.env
+*.tar
+*.tgz
+*.zip
